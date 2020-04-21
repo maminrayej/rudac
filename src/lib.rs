@@ -1,7 +1,5 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+//! # Rudac
+//! Rudac is a **Ru**st **D**ata structure and **A**lgorithm **C**rate.
+//! It aims to be a comprehensive crate of usefull data structure and algorithms. 
+
+pub mod queue;
