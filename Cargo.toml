@@ -5,8 +5,9 @@ authors = ["mohamad amin rayej <m.amin.rayej@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 categories = ["data-structures", "algorithms"]
-description = "A crate for common data structure and algorithms"
+description = "A crate for common data structures and algorithms"
 repository = "https://github.com/maminrayej/rudac"
+readme = "README.md"
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

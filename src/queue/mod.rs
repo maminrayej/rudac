@@ -154,6 +154,61 @@ impl<T> Circular<T> {
         return Some(element);
     }
 
+    /// Transforms each element in the queue using the transform function provided
+    ///
+    /// # Arguments
+    /// * `transform`: function that transforms each element of the queue and returns that transformed element
+    ///
+    /// # Examples
+    /// ```
+    /// fn all_caps(text: &String) -> String {
+    ///     return text.to_uppercase();
+    /// }
+    ///
+    /// let mut circular_buffer: rudac::queue::Circular<String> = rudac::queue::Circular::new(1);
+    ///
+    /// circular_buffer.enqueue(String::from("element"));
+    ///
+    /// circular_buffer.map(all_caps);
+    ///
+    /// match circular_buffer.dequeue() {
+    ///     Some(data) => assert_eq!(*data, String::from("ELEMENT")),
+    ///     None => panic!("Data must not be None")
+    /// }
+    /// ```
+    pub fn map(&mut self, transform: fn(&T) -> T) {
+        for i in 0..self.size() {
+            self[i] = transform(&self[i]);
+        }
+    }
+
+    /// Transforms each element in the queue using the transform closure provided
+    ///
+    /// # Arguments
+    /// * `transform`: closure that transforms each element of the queue and returns that transformed element
+    ///
+    /// # Examples
+    /// ```
+    /// let mut circular_buffer: rudac::queue::Circular<String> = rudac::queue::Circular::new(1);
+    ///
+    /// circular_buffer.enqueue(String::from("element"));
+    ///
+    /// circular_buffer.map_closure(|text: &String| -> String{text.to_uppercase()});
+    ///
+    /// match circular_buffer.dequeue() {
+    ///     Some(data) => assert_eq!(*data, String::from("ELEMENT")),
+    ///     None => panic!("Data must not be None")
+    /// }
+    /// ```
+    pub fn map_closure<F>(&mut self, transform: F)
+    where
+        F: Fn(&T) -> T,
+    {
+        for i in 0..self.size() {
+            self[i] = transform(&self[i]);
+        }
+    }
+
     /// Clears the queue and resets internal flags
     pub fn clear(&mut self) {
         self.internal_vec.clear();
@@ -611,6 +666,92 @@ mod tests {
 
         for _ in &vc {
             panic!("Loop sould not get executed");
+        }
+    }
+
+    fn all_caps(text: &String) -> String {
+        return text.to_uppercase();
+    }
+
+    #[test]
+    fn apply_map() {
+        let mut vc: Circular<String> = Circular::new(2);
+
+        vc.enqueue(String::from("element1"));
+        vc.enqueue(String::from("element2"));
+
+        vc.map(all_caps);
+
+        match vc.dequeue() {
+            Some(data) => assert_eq!(*data, String::from("ELEMENT1")),
+            None => panic!("Data must not be None"),
+        }
+
+        match vc.dequeue() {
+            Some(data) => assert_eq!(*data, String::from("ELEMENT2")),
+            None => panic!("Data must not be None"),
+        }
+    }
+
+    fn plus_one(num: &usize) -> usize {
+        return *num + 1;
+    }
+
+    #[test]
+    fn apply_map_primitive_data() {
+        let mut vc: Circular<usize> = Circular::new(2);
+        vc.enqueue(1);
+        vc.enqueue(2);
+
+        vc.map(plus_one);
+
+        match vc.dequeue() {
+            Some(data) => assert_eq!(*data, 2),
+            None => panic!("Data must not be None"),
+        }
+
+        match vc.dequeue() {
+            Some(data) => assert_eq!(*data, 3),
+            None => panic!("Data must not be None"),
+        }
+    }
+
+    #[test]
+    fn apply_map_closure() {
+        let mut vc: Circular<String> = Circular::new(2);
+
+        vc.enqueue(String::from("element1"));
+        vc.enqueue(String::from("element2"));
+
+        vc.map_closure(|text: &String| -> String { text.to_uppercase() });
+
+        match vc.dequeue() {
+            Some(data) => assert_eq!(*data, String::from("ELEMENT1")),
+            None => panic!("Data must not be None"),
+        }
+
+        match vc.dequeue() {
+            Some(data) => assert_eq!(*data, String::from("ELEMENT2")),
+            None => panic!("Data must not be None"),
+        }
+    }
+
+    #[test]
+    fn apply_map_closure_primitive_data() {
+        let mut vc: Circular<usize> = Circular::new(2);
+        vc.enqueue(1);
+        vc.enqueue(2);
+
+        vc.map_closure(|num: &usize| -> usize { num + 1 });
+
+        match vc.dequeue() {
+            Some(data) => assert_eq!(*data, 2),
+            None => panic!("Data must not be None"),
+        }
+
+        match vc.dequeue() {
+            Some(data) => assert_eq!(*data, 3),
+            None => panic!("Data must not be None"),
         }
     }
 }
