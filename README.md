@@ -11,4 +11,4 @@ Data structures:
 Todo:
 * :heavy_check_mark: [Circular Queue](https://en.wikipedia.org/wiki/Circular_buffer)
 * :soon: "Circular Queue" Wiki
-* :soon: [Circular Linked list](https://en.wikipedia.org/wiki/Linked_list#Circular_linked_list)
+* :soon: [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
