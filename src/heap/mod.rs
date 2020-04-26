@@ -1,3 +1,3 @@
 mod binomial;
 
-pub use binomial::BinomialTree;
+pub use binomial::BinomialHeap;
