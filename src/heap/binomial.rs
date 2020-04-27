@@ -48,12 +48,9 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
     }
 
     fn is_smaller_or_equall(&self, other: &BinomialTree<T>) -> bool {
-        match self.peek_payload() {
-            Some(value1) => match other.peek_payload() {
-                Some(value2) => value1 <= value2,
-                None => false,
-            },
-            None => false,
+        match (self.peek_payload(), other.peek_payload()) {
+            (Some(payload1), Some(payload2)) => payload1 <= payload2,
+            _ => panic!("Payloads can not be None. Please report this bug"),
         }
     }
 
@@ -64,10 +61,10 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
 
 impl<T: std::cmp::Ord + std::fmt::Display> BinomialTree<T> {
     fn preorder(node: &BinomialTree<T>) -> String {
-        return String::from(BinomialTree::pre_visit(&Some(node)).trim());
+        return String::from(BinomialTree::_pre_visit(&Some(node)).trim());
     }
 
-    fn pre_visit(node: &Option<&BinomialTree<T>>) -> String {
+    fn _pre_visit(node: &Option<&BinomialTree<T>>) -> String {
         let mut node_list = String::from("");
         match node {
             None => node_list,
@@ -75,13 +72,13 @@ impl<T: std::cmp::Ord + std::fmt::Display> BinomialTree<T> {
                 // visit the node
                 match data.peek_payload() {
                     Some(value) => node_list.push_str(format!("{} ", value).as_str()),
-                    None => (),
+                    None => panic!("Payload can not be None. Please report this bug"),
                 }
                 //visit children from left to right
                 for i in 0..data.children.len() {
                     match &data.children[i] {
                         Some(data) => {
-                            node_list.push_str(BinomialTree::pre_visit(&Some(&data)).as_str())
+                            node_list.push_str(BinomialTree::_pre_visit(&Some(&data)).as_str())
                         }
                         None => (),
                     }
@@ -108,10 +105,11 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
         BinomialHeap { roots: roots }
     }
 
-    fn _push(&mut self, mut new_node: BinomialTree<T>, rank: usize) {
+    fn _push(&mut self, mut new_node: BinomialTree<T>) {
         let max_rank = self.roots.len();
+        let start_rank = new_node.rank();
 
-        for i in rank..max_rank {
+        for i in start_rank..max_rank {
             match self.roots[i].take() {
                 Some(node) => {
                     new_node = BinomialTree::merge(node, new_node);
@@ -132,19 +130,17 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
     pub fn push(&mut self, payload: T) {
         let new_node = BinomialTree::init(payload);
 
-        self._push(new_node, 0);
+        self._push(new_node);
     }
 
     pub fn pop(&mut self) -> T {
         let mut min_index = 0;
-        let min_node: &Option<BinomialTree<T>>;
+        let mut min_node: &Option<BinomialTree<T>>;
 
-        // find first item
+        // find first non-None item
         for i in 0..self.roots.len() {
             match &self.roots[i] {
-                Some(_) => {
-                    min_index = i;
-                }
+                Some(_) => min_index = i,
                 None => (),
             }
         }
@@ -153,30 +149,28 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
 
         // find first item
         for i in min_index + 1..self.roots.len() {
-            match &self.roots[i] {
-                Some(node) => match min_node {
-                    Some(internal_node) => {
-                        if node.is_smaller_or_equall(internal_node) {
-                            min_index = i;
-                        }
+            match (&self.roots[i], min_node) {
+                (Some(node), Some(min)) => {
+                    if node.is_smaller_or_equall(min) {
+                        min_index = i;
                     }
-                    None => (),
-                },
-                None => (),
+                }
+                _ => panic!("Neither 'node' or 'min' should be None. Please report this bug"),
             }
+            min_node = &self.roots[min_index];
         }
 
         let mut min_node_taken = self.roots[min_index].take().unwrap();
 
+        // push children of the min node into heap
         for i in 0..min_node_taken.children.len() {
             let child = min_node_taken.children[i].take().unwrap();
 
-            let child_rank = child.rank();
-
-            self._push(child, child_rank);
+            self._push(child);
         }
 
-        return min_node_taken.get_payload();
+        // return payload the min node
+        min_node_taken.get_payload()
     }
 }
 
@@ -330,11 +324,8 @@ mod tests {
 
         let value = bh.pop();
 
-        assert_eq!(
-            bh.preorder(),
-            format!("Rank 0: 1\nRank 1: 2 3\nRank 2: \n")
-        );
+        assert_eq!(bh.preorder(), format!("Rank 0: 1\nRank 1: 2 3\nRank 2: \n"));
 
-        assert_eq!(value, 0)    
+        assert_eq!(value, 0)
     }
 }
