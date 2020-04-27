@@ -7,7 +7,7 @@ pub struct BinomialHeap<T: std::cmp::Ord> {
 
 impl<T: std::cmp::Ord> BinomialHeap<T> {
     pub fn init(payload: T) -> BinomialHeap<T> {
-        let root = Some(BinomialTree::init(payload));
+        let root = Some(BinomialTree::init_min(payload));
 
         let mut roots = Vec::new();
 
@@ -42,7 +42,7 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
     }
 
     pub fn push(&mut self, payload: T) {
-        let new_node = BinomialTree::init(payload);
+        let new_node = BinomialTree::init_min(payload);
 
         self._push(new_node);
 
