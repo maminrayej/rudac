@@ -74,7 +74,7 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
         for i in min_index + 1..self.roots.len() {
             match (&self.roots[i], min_node) {
                 (Some(node), Some(min)) => {
-                    if node.is_smaller_or_equall(min) {
+                    if BinomialTree::is_smaller_or_equall(&node, min) {
                         min_index = i;
                     }
                 }
