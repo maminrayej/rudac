@@ -26,7 +26,7 @@ use crate::tree::BinomialTree;
 ///     format!("Rank 0: \nRank 1: \nRank 2: 0 1 2 3\n")
 /// );
 /// ```
-///
+#[derive(Debug)]
 pub struct BinomialHeap<T: std::cmp::Ord> {
     // stores binomial trees of different ranks
     // index of the vector represents the rank of the tree
