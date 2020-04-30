@@ -6,9 +6,12 @@ It aims to be a comprehensive crate of usefull data structure and algorithms.
 It is still an ongoing project.
 
 Data structures:
-* [Circular Queue](https://en.wikipedia.org/wiki/Circular_buffer)
+* [Circular Queue / Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer)
+* Binomial Tree
+* [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
 
 Todo:
-* :heavy_check_mark: [Circular Queue](https://en.wikipedia.org/wiki/Circular_buffer)
-* :soon: "Circular Queue" Wiki
-* :soon: [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
+* "Circular Queue" Wiki
+* "Binomial Heap" Wiki
+* :soon: [Fibonacci Heap](https://en.wikipedia.org/wiki/Fibonacci_heap)
+
