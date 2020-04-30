@@ -28,7 +28,7 @@ pub struct BinomialTree<T: std::cmp::Ord> {
     // children of the current node
     children: Vec<Option<BinomialTree<T>>>,
 
-    // contents of the node
+    // content of the node
     payload: Option<T>,
 
     // indicates wether the binomial tree is a min or max one
@@ -78,8 +78,8 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
         BinomialTree::init(payload, false)
     }
 
-    // initializes the min or max binomial tree based on `min` argument
-    fn init(payload: T, min: bool) -> BinomialTree<T> {
+    /// **Note**: this method is for internal use. use init_min or init_max functions instead.
+    pub fn init(payload: T, min: bool) -> BinomialTree<T> {
         BinomialTree {
             rank: 0,
             children: Vec::new(),
@@ -107,20 +107,21 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
     ///
     /// # Panics
     /// * panics if rank of two binomial trees are not the same
+    /// * panics if trees are of different types(ex. one is min binomial tree and the other is max binomial tree)
     ///
     /// # Examples
     /// ```
     /// use rudac::tree::BinomialTree;
     ///
     /// // create two binomial trees of rank 0
-    /// let bt1 = BinomialTree::init_min("ru");
-    /// let bt2 = BinomialTree::init_min("dac");
+    /// let bt1 = BinomialTree::init_min(0);
+    /// let bt2 = BinomialTree::init_min(1);
     ///
     /// // merge two trees and get a binomial tree of rank 1
     /// let merged_tree = BinomialTree::merge(bt1, bt2);
     ///
-    /// // preorder traveral of the heap is equal to "dac" "ru"
-    /// assert_eq!(BinomialTree::preorder(&merged_tree), "dac ru");
+    /// // preorder traveral of the heap is equal to 0 1
+    /// assert_eq!(BinomialTree::preorder(&merged_tree), "0 1");
     /// assert_eq!(merged_tree.rank(), 1);
     /// ```
     pub fn merge(
@@ -139,12 +140,13 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
 
         // trees_are_min indicates wether the comparison is between two min trees or two max trees
         let trees_are_min = binomial_tree_1.is_min();
+        let trees_are_max = binomial_tree_1.is_max();
 
         // if two trees are min binomial trees the minimum must become the new root
         // if two trees are max binomial trees the maximum must become the new root
         if (trees_are_min && BinomialTree::is_smaller_or_equall(&binomial_tree_1, &binomial_tree_2))
-            || (!trees_are_min
-                && BinomialTree::is_smaller_or_equall(&binomial_tree_2, &binomial_tree_1))
+            || (trees_are_max
+                && BinomialTree::is_greater_or_equall(&binomial_tree_1, &binomial_tree_2))
         {
             binomial_tree_1.add(binomial_tree_2);
             return binomial_tree_1;
@@ -160,7 +162,7 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
     /// ```
     /// use rudac::tree::BinomialTree;
     ///
-    /// let bt = BinomialTree::init_min("rudac");
+    /// let bt = BinomialTree::init_min("rudac is awesome");
     ///
     /// assert_eq!(bt.rank(), 0);
     /// ```
@@ -174,14 +176,30 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
     /// ```
     /// use rudac::tree::BinomialTree;
     ///
-    /// let bt1 = BinomialTree::init_min("rudac");
-    /// let bt2 = BinomialTree::init_max("rudac");
+    /// let bt1 = BinomialTree::init_min("rudac is awesome");
+    /// let bt2 = BinomialTree::init_max("rudac is cute");
     ///
     /// assert_eq!(bt1.is_min(), true);
     /// assert_eq!(bt2.is_min(), false);
     /// ```
     pub fn is_min(&self) -> bool {
         self.min
+    }
+
+    /// Returns true if binomial tree is initialized as a max binomial tree
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::BinomialTree;
+    ///
+    /// let bt1 = BinomialTree::init_min("rudac is awesome");
+    /// let bt2 = BinomialTree::init_max("rudac is cute");
+    ///
+    /// assert_eq!(bt1.is_max(), false);
+    /// assert_eq!(bt2.is_max(), true);
+    /// ```
+    pub fn is_max(&self) -> bool {
+        !self.is_min()
     }
 
     /// Extracts and returns the payload from the node and replaces it with None
@@ -193,9 +211,9 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
     /// ```
     /// use rudac::tree::BinomialTree;
     ///
-    /// let mut bt = BinomialTree::init_min("rudac");
+    /// let mut bt = BinomialTree::init_min("rudac is awesome");
     ///
-    /// assert_eq!(bt.get_payload(), "rudac");
+    /// assert_eq!(bt.get_payload(), "rudac is awesome");
     /// ```
     pub fn get_payload(&mut self) -> T {
         if self.payload == None {
@@ -211,16 +229,16 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
     /// ```
     /// use rudac::tree::BinomialTree;
     ///
-    /// let mut bt = BinomialTree::init_min("rudac");
+    /// let mut bt = BinomialTree::init_min("rudac is awesome");
     ///
-    /// assert_eq!(*bt.peek_payload(), Some("rudac"));
+    /// assert_eq!(*bt.peek_payload(), Some("rudac is awesome"));
     /// ```
     pub fn peek_payload(&self) -> &Option<T> {
         &self.payload
     }
 
     /// Compares payloads which reside in roots of two binomial trees `first` and `other`.
-    /// Returns True if payload of `first` is smaller or equall than payload of `other`
+    /// Returns true if payload of `first` is smaller or equall than payload of `other`
     ///
     /// # Examples
     /// ```
@@ -239,12 +257,32 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
         }
     }
 
+    /// Compares payloads which reside in roots of two binomial trees `first` and `other`.
+    /// Returns true if payload of `first` is greater or equall than payload of `other`
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::BinomialTree;
+    ///
+    /// let bt1 = BinomialTree::init_min(0);
+    /// let bt2 = BinomialTree::init_min(1);
+    ///
+    /// assert_eq!(false, BinomialTree::is_greater_or_equall(&bt1, &bt2));
+    /// assert_eq!(true, BinomialTree::is_greater_or_equall(&bt2, &bt1));
+    /// ```
+    pub fn is_greater_or_equall(first: &BinomialTree<T>, other: &BinomialTree<T>) -> bool {
+        match (first.peek_payload(), other.peek_payload()) {
+            (Some(payload1), Some(payload2)) => payload1 >= payload2,
+            _ => panic!("Payloads can not be None"), // if one of the payloads or both of them are None
+        }
+    }
+
     /// Returns a mutable reference to vector of children
     pub fn children_mut(&mut self) -> &mut Vec<Option<BinomialTree<T>>> {
         &mut self.children
     }
 
-    /// Returns a immutable reference to vector of childre
+    /// Returns an immutable reference to vector of childre
     pub fn children(&self) -> &Vec<Option<BinomialTree<T>>> {
         &self.children
     }
@@ -314,17 +352,31 @@ mod tests {
     use super::*;
 
     #[test]
-    fn binomial_tree_create() {
+    fn tree_binomial_init_min() {
         let bt = BinomialTree::init_min(0);
 
         assert_eq!(*bt.peek_payload(), Some(0));
+        assert_eq!(bt.is_max(), false);
+        assert_eq!(bt.is_min(), true);
         assert_eq!(bt.rank, 0);
         assert_eq!(bt.children.len(), 0);
         assert_eq!(BinomialTree::preorder(&bt), String::from("0"));
     }
 
     #[test]
-    fn binomial_tree_merge_rank_0() {
+    fn tree_binomial_init_max() {
+        let bt = BinomialTree::init_max(0);
+
+        assert_eq!(*bt.peek_payload(), Some(0));
+        assert_eq!(bt.is_max(), true);
+        assert_eq!(bt.is_min(), false);
+        assert_eq!(bt.rank, 0);
+        assert_eq!(bt.children.len(), 0);
+        assert_eq!(BinomialTree::preorder(&bt), String::from("0"));
+    }
+
+    #[test]
+    fn tree_binomial_merge_rank_0_min() {
         let bt1 = BinomialTree::init_min(0);
         let bt2 = BinomialTree::init_min(1);
 
@@ -336,7 +388,19 @@ mod tests {
     }
 
     #[test]
-    fn binomial_tree_merge_rank_0_ref() {
+    fn tree_binomial_merge_rank_0_max() {
+        let bt1 = BinomialTree::init_max(0);
+        let bt2 = BinomialTree::init_max(1);
+
+        let merged_tree = BinomialTree::merge(bt1, bt2);
+
+        assert_eq!(BinomialTree::preorder(&merged_tree), String::from("1 0"));
+
+        assert_eq!(merged_tree.rank(), 1);
+    }
+
+    #[test]
+    fn tree_binomial_merge_rank_0_ref_min() {
         let bt1 = BinomialTree::init_min(String::from("a"));
         let bt2 = BinomialTree::init_min(String::from("b"));
 
@@ -348,7 +412,19 @@ mod tests {
     }
 
     #[test]
-    fn binomial_tree_merge_rank_1() {
+    fn tree_binomial_merge_rank_0_ref_max() {
+        let bt1 = BinomialTree::init_max(String::from("a"));
+        let bt2 = BinomialTree::init_max(String::from("b"));
+
+        let merged_tree = BinomialTree::merge(bt1, bt2);
+
+        assert_eq!(BinomialTree::preorder(&merged_tree), String::from("b a"));
+
+        assert_eq!(merged_tree.rank(), 1);
+    }
+
+    #[test]
+    fn tree_binomial_merge_rank_1_min() {
         let bt1 = BinomialTree::init_min(0);
         let bt2 = BinomialTree::init_min(1);
 
@@ -368,7 +444,27 @@ mod tests {
     }
 
     #[test]
-    fn binomial_tree_merge_rank_2() {
+    fn tree_binomial_merge_rank_1_max() {
+        let bt1 = BinomialTree::init_max(0);
+        let bt2 = BinomialTree::init_max(1);
+
+        let merged_tree_1 = BinomialTree::merge(bt1, bt2);
+        let bt3 = BinomialTree::init_max(2);
+        let bt4 = BinomialTree::init_max(3);
+
+        let merged_tree_2 = BinomialTree::merge(bt3, bt4);
+
+        let merged_tree = BinomialTree::merge(merged_tree_1, merged_tree_2);
+
+        assert_eq!(
+            BinomialTree::preorder(&merged_tree),
+            String::from("3 2 1 0")
+        );
+        assert_eq!(merged_tree.rank(), 2);
+    }
+
+    #[test]
+    fn tree_binomial_merge_rank_2_min() {
         let bt1 = BinomialTree::init_min(0);
         let bt2 = BinomialTree::init_min(1);
 
@@ -401,7 +497,7 @@ mod tests {
     }
 
     #[test]
-    fn binomial_tree_merge_rank_2_max() {
+    fn tree_binomial_merge_rank_2_max() {
         let bt1 = BinomialTree::init_max(0);
         let bt2 = BinomialTree::init_max(1);
 
@@ -435,7 +531,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Both binomial trees must be of the same type(both min or both max)")]
-    fn binomial_tree_merge_min_max() {
+    fn tree_binomial_panic_merge_min_max() {
         let min_bt = BinomialTree::init_min(0);
         let max_bt = BinomialTree::init_max(0);
 
@@ -444,7 +540,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Binomial tree ranks must be the same when merging")]
-    fn binomial_tree_merge_different_ranks() {
+    fn tree_binomial_panic_merge_different_ranks() {
         let bt1 = BinomialTree::init_min(0);
         let bt2 = BinomialTree::init_min(0);
         let bt3 = BinomialTree::init_min(0);
@@ -456,7 +552,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Payload is None")]
-    fn binomial_tree_get_payload_panic() {
+    fn tree_binomial_panic_get_payload() {
         let mut bt1 = BinomialTree::init_min(0);
 
         bt1.get_payload();
