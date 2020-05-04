@@ -32,7 +32,9 @@ pub struct BinomialHeap<T: std::cmp::Ord> {
     // index of the vector represents the rank of the tree
     // ex. tree at index=2 has rank=2 thus has 4 nodes in it
     roots: Vec<Option<BinomialTree<T>>>,
-    
+    // index of the root with highest priority(candidate to be popped)
+    candidate_root_index: usize,
+
     // number of items in the heap
     size: usize,
 
@@ -41,7 +43,6 @@ pub struct BinomialHeap<T: std::cmp::Ord> {
 }
 
 impl<T: std::cmp::Ord> BinomialHeap<T> {
-
     // initializes binomial heap based on the type specified by `min` argument
     fn init(payload: T, min: bool) -> BinomialHeap<T> {
         // create a binomial tree with rank 0
@@ -55,6 +56,7 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
         BinomialHeap {
             roots: roots,
             size: 1,
+            candidate_root_index: 0,
             min,
         }
     }
@@ -134,6 +136,9 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
         mut binomial_heap_1: BinomialHeap<T>,
         mut binomial_heap_2: BinomialHeap<T>,
     ) -> BinomialHeap<T> {
+        // size of heap2 will be heap2.size + heap1.size
+        binomial_heap_2.set_size(binomial_heap_2.size() + binomial_heap_1.size());
+
         // iterate over binomial trees in heap1 and push them into heap 2
         for i in 0..binomial_heap_1.max_tree_rank() {
             match binomial_heap_1.roots[i].take() {
@@ -202,6 +207,9 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
                 }
             }
         }
+
+        // update candidate index
+        self.candidate_root_index = self.find_candidate_root_index();
     }
 
     /// Pops and returns item with highest priority. Returns `None` if heap is empty
@@ -219,64 +227,55 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
             return None;
         }
 
-        // candidate index to pop the item with largest priority
-        let mut candidate_index = 0;
-
-        // candidate node to be poped
-        let mut candidate_node_option: &Option<BinomialTree<T>>;
-
-        // find first rank which has an existing binomial tree in it.
-        // root of the found binomial tree will become the candidate.
-        // unless in the next iteration we find a root with larger priority, this root will be poped
-        for i in 0..self.roots.len() {
-            match &self.roots[i] {
-                Some(_) => {
-                    candidate_index = i; // found candidate index
-                    break;
-                }
-                None => (),
-            }
-        }
-
-        // initialize the candidate node to be poped
-        candidate_node_option = &self.roots[candidate_index];
-
-        // find index of the item with largest priority
-        // iteration will start at the next index of the candidate index
-        for i in candidate_index + 1..self.roots.len() {
-            match (&self.roots[i], candidate_node_option) {
-                (Some(node), Some(largest_prioity_node)) => {
-                    // in two cases candidate node will be replaced with the current node in the iteration
-                    // 1- heap is a min heap and current node has a smaller root than the candidate
-                    // 2- heap is a max heap and current node has a larger root than the candidate
-                    if (self.is_min()
-                        && BinomialTree::is_smaller_or_equall(&node, largest_prioity_node))
-                        || (self.is_max()
-                            && BinomialTree::is_greater_or_equall(&node, largest_prioity_node))
-                    {
-                        candidate_index = i; // update candidate index
-                    }
-                }
-                _ => (),
-            }
-            candidate_node_option = &self.roots[candidate_index]; // update candidate node
-        }
+        // find index of root with highest priority
+        let candidate_index = self.find_candidate_root_index();
 
         // extract the node from heap
-        let mut poped_node = self.roots[candidate_index].take().unwrap();
+        let mut popped_node = self.roots[candidate_index].take().unwrap();
 
-        // push children of the poped node into heap
-        for i in 0..poped_node.children().len() {
-            let child = poped_node.children_mut()[i].take().unwrap();
+        // push children of the popped node into heap
+        for i in 0..popped_node.children().len() {
+            let child = popped_node.children_mut()[i].take().unwrap();
 
             self._push(child);
         }
 
         self.size -= 1;
 
-        // return payload the poped node
-        Some(poped_node.get_payload())
+        // return payload the popped node
+        Some(popped_node.get_payload())
     }
+
+    /// Returns a reference to item with highest priority
+    /// 
+    /// # Examples
+    /// ```
+    /// use rudac::heap::BinomialHeap;
+    /// 
+    /// let bh1 = BinomialHeap::init_min(0);
+    /// let bh2 = BinomialHeap::init_min(1);
+    /// let mut merged_heap = BinomialHeap::merge(bh1, bh2);
+    /// 
+    /// assert_eq!(*merged_heap.peek(), Some(0));
+    /// merged_heap.pop();
+    /// 
+    /// assert_eq!(*merged_heap.peek(), Some(1));
+    /// merged_heap.pop();
+    /// 
+    /// merged_heap.pop();
+    /// assert_eq!(*merged_heap.peek(), None);
+    /// ```
+    pub fn peek(&self) -> &Option<T> {
+        if self.is_empty() {
+            return &None;
+        }
+
+        self.roots[self.candidate_root_index]
+            .as_ref()
+            .unwrap()
+            .peek_payload()
+    }
+
     /// Clears the heap and resets internal flags
     ///
     /// # Examples
@@ -308,6 +307,11 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
     /// ```
     pub fn size(&self) -> usize {
         self.size
+    }
+
+    // updates size of the heap
+    fn set_size(&mut self, size: usize) {
+        self.size = size;
     }
 
     /// Returns true if the current heap is a min heap
@@ -356,6 +360,54 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
 
     fn max_tree_rank(&self) -> usize {
         self.roots.len()
+    }
+
+    // find index of root with highest priority(minimum root in min heap and maximum root in max heap)
+    fn find_candidate_root_index(&self) -> usize {
+        // candidate index to pop the item with largest priority
+        let mut candidate_index = 0;
+
+        // candidate node to be popped
+        let mut candidate_node_option: &Option<BinomialTree<T>>;
+
+        // find first rank which has an existing binomial tree in it.
+        // root of the found binomial tree will become the candidate.
+        // unless in the next iteration we find a root with larger priority, this root will be popped
+        for i in 0..self.roots.len() {
+            match &self.roots[i] {
+                Some(_) => {
+                    candidate_index = i; // found candidate index
+                    break;
+                }
+                None => (),
+            }
+        }
+
+        // initialize the candidate node to be popped
+        candidate_node_option = &self.roots[candidate_index];
+
+        // find index of the item with largest priority
+        // iteration will start at the next index of the candidate index
+        for i in candidate_index + 1..self.roots.len() {
+            match (&self.roots[i], candidate_node_option) {
+                (Some(node), Some(largest_priority_node)) => {
+                    // in two cases candidate node will be replaced with the current node in the iteration
+                    // 1- heap is a min heap and current node has a smaller root than the candidate
+                    // 2- heap is a max heap and current node has a larger root than the candidate
+                    if (self.is_min()
+                        && BinomialTree::is_smaller_or_equall(&node, largest_priority_node))
+                        || (self.is_max()
+                            && BinomialTree::is_greater_or_equall(&node, largest_priority_node))
+                    {
+                        candidate_index = i; // update candidate index
+                    }
+                }
+                _ => (),
+            }
+            candidate_node_option = &self.roots[candidate_index]; // update candidate node
+        }
+
+        candidate_index
     }
 }
 
@@ -737,6 +789,82 @@ mod tests {
         assert_eq!(
             BinomialHeap::preorder(&merged_heap),
             format!("Rank 0: \nRank 1: \nRank 2: 3 2 1 0\n")
+        );
+    }
+
+    #[test]
+    fn heap_binomial_peek_min_1() {
+        let bh1 = BinomialHeap::init_min(0);
+
+        assert_eq!(*bh1.peek(), Some(0));
+        assert_eq!(BinomialHeap::preorder(&bh1), format!("Rank 0: 0\n"));
+    }
+
+    #[test]
+    fn heap_binomial_peek_min_2() {
+        let bh1 = BinomialHeap::init_min(0);
+        let bh2 = BinomialHeap::init_min(1);
+
+        let merged_heap = BinomialHeap::merge(bh1, bh2);
+
+        assert_eq!(*merged_heap.peek(), Some(0));
+        assert_eq!(
+            BinomialHeap::preorder(&merged_heap),
+            format!("Rank 0: \nRank 1: 0 1\n")
+        );
+    }
+
+    #[test]
+    fn heap_binomial_peek_min_empty_heap() {
+        let bh1 = BinomialHeap::init_min(0);
+        let bh2 = BinomialHeap::init_min(1);
+
+        let mut merged_heap = BinomialHeap::merge(bh1, bh2);
+
+        merged_heap.pop();
+        merged_heap.pop();
+        assert_eq!(*merged_heap.peek(), None);
+        assert_eq!(
+            BinomialHeap::preorder(&merged_heap),
+            format!("Rank 0: \nRank 1: \n")
+        );
+    }
+
+    #[test]
+    fn heap_binomial_peek_max_1() {
+        let bh1 = BinomialHeap::init_max(0);
+
+        assert_eq!(*bh1.peek(), Some(0));
+        assert_eq!(BinomialHeap::preorder(&bh1), format!("Rank 0: 0\n"));
+    }
+
+    #[test]
+    fn heap_binomial_peek_max_2() {
+        let bh1 = BinomialHeap::init_max(0);
+        let bh2 = BinomialHeap::init_max(1);
+
+        let merged_heap = BinomialHeap::merge(bh1, bh2);
+
+        assert_eq!(*merged_heap.peek(), Some(1));
+        assert_eq!(
+            BinomialHeap::preorder(&merged_heap),
+            format!("Rank 0: \nRank 1: 1 0\n")
+        );
+    }
+
+    #[test]
+    fn heap_binomial_peek_max_empty_heap() {
+        let bh1 = BinomialHeap::init_max(0);
+        let bh2 = BinomialHeap::init_max(1);
+
+        let mut merged_heap = BinomialHeap::merge(bh1, bh2);
+
+        merged_heap.pop();
+        merged_heap.pop();
+        assert_eq!(*merged_heap.peek(), None);
+        assert_eq!(
+            BinomialHeap::preorder(&merged_heap),
+            format!("Rank 0: \nRank 1: \n")
         );
     }
 
