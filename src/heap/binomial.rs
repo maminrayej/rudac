@@ -262,7 +262,6 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
     /// assert_eq!(*merged_heap.peek(), Some(1));
     /// merged_heap.pop();
     /// 
-    /// merged_heap.pop();
     /// assert_eq!(*merged_heap.peek(), None);
     /// ```
     pub fn peek(&self) -> &Option<T> {
