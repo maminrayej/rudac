@@ -2,7 +2,7 @@
 ///
 /// B<sub>k</sub>:
 /// * k = 0: consists of only one node which is the root
-/// * k > 0: consists of one root and children of binomial trees of degress {B<sub>0</sub>, B<sub>1</sub>, ... , B<sub>k-1</sub>}
+/// * k > 0: consists of one root and children of binomial trees of degrees {B<sub>0</sub>, B<sub>1</sub>, ... , B<sub>k-1</sub>}
 ///
 /// # Examples
 /// ```
@@ -15,7 +15,7 @@
 /// // merge two trees and get a binomial tree of rank 1
 /// let merged_tree = BinomialTree::merge(bt1, bt2);
 ///
-/// // preorder traveral of the heap is equal to 0 1
+/// // preorder traversal of the heap is equal to 0 1
 /// assert_eq!(BinomialTree::preorder(&merged_tree), String::from("0 1"));
 /// assert_eq!(merged_tree.rank(), 1);
 /// ```
@@ -89,8 +89,8 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
     }
 
     // adds a binomial tree as the rightmost child of the current binomial tree
-    // this method is called from `merge` method thus compatablity between these two trees has been checked
-    // if you call this function directly you sould check compatability between ranks and types of these two trees
+    // this method is called from `merge` method thus compatibility between these two trees has been checked
+    // if you call this function directly you should check compatibility between ranks and types of these two trees
     fn add(&mut self, binomial_tree: BinomialTree<T>) {
         // add the binomial tree as the rightmost child
         self.children.push(Some(binomial_tree));
@@ -120,7 +120,7 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
     /// // merge two trees and get a binomial tree of rank 1
     /// let merged_tree = BinomialTree::merge(bt1, bt2);
     ///
-    /// // preorder traveral of the heap is equal to 0 1
+    /// // preorder traversal of the heap is equal to 0 1
     /// assert_eq!(BinomialTree::preorder(&merged_tree), "0 1");
     /// assert_eq!(merged_tree.rank(), 1);
     /// ```
@@ -128,12 +128,12 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
         mut binomial_tree_1: BinomialTree<T>,
         mut binomial_tree_2: BinomialTree<T>,
     ) -> BinomialTree<T> {
-        // rank compatability check
+        // rank compatibility check
         if binomial_tree_1.rank() != binomial_tree_2.rank {
             panic!("Binomial tree ranks must be the same when merging");
         }
 
-        // type compatability check
+        // type compatibility check
         if binomial_tree_1.is_min() != binomial_tree_2.is_min() {
             panic!("Both binomial trees must be of the same type(both min or both max)");
         }
@@ -144,9 +144,9 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
 
         // if two trees are min binomial trees the minimum must become the new root
         // if two trees are max binomial trees the maximum must become the new root
-        if (trees_are_min && BinomialTree::is_smaller_or_equall(&binomial_tree_1, &binomial_tree_2))
+        if (trees_are_min && BinomialTree::is_smaller_or_equal(&binomial_tree_1, &binomial_tree_2))
             || (trees_are_max
-                && BinomialTree::is_greater_or_equall(&binomial_tree_1, &binomial_tree_2))
+                && BinomialTree::is_greater_or_equal(&binomial_tree_1, &binomial_tree_2))
         {
             binomial_tree_1.add(binomial_tree_2);
             return binomial_tree_1;
@@ -223,7 +223,7 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
         self.payload.take().unwrap()
     }
 
-    /// Returns a refrence to payload
+    /// Returns a reference to payload
     ///
     /// # Examples
     /// ```
@@ -238,7 +238,7 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
     }
 
     /// Compares payloads which reside in roots of two binomial trees `first` and `other`.
-    /// Returns true if payload of `first` is smaller or equall than payload of `other`
+    /// Returns true if payload of `first` is smaller or equal than payload of `other`
     ///
     /// # Examples
     /// ```
@@ -247,10 +247,10 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
     /// let bt1 = BinomialTree::init_min(0);
     /// let bt2 = BinomialTree::init_min(1);
     ///
-    /// assert_eq!(true, BinomialTree::is_smaller_or_equall(&bt1, &bt2));
-    /// assert_eq!(false, BinomialTree::is_smaller_or_equall(&bt2, &bt1));
+    /// assert_eq!(true, BinomialTree::is_smaller_or_equal(&bt1, &bt2));
+    /// assert_eq!(false, BinomialTree::is_smaller_or_equal(&bt2, &bt1));
     /// ```
-    pub fn is_smaller_or_equall(first: &BinomialTree<T>, other: &BinomialTree<T>) -> bool {
+    pub fn is_smaller_or_equal(first: &BinomialTree<T>, other: &BinomialTree<T>) -> bool {
         match (first.peek_payload(), other.peek_payload()) {
             (Some(payload1), Some(payload2)) => payload1 <= payload2,
             _ => panic!("Payloads can not be None"), // if one of the payloads or both of them are None
@@ -258,7 +258,7 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
     }
 
     /// Compares payloads which reside in roots of two binomial trees `first` and `other`.
-    /// Returns true if payload of `first` is greater or equall than payload of `other`
+    /// Returns true if payload of `first` is greater or equal than payload of `other`
     ///
     /// # Examples
     /// ```
@@ -267,10 +267,10 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
     /// let bt1 = BinomialTree::init_min(0);
     /// let bt2 = BinomialTree::init_min(1);
     ///
-    /// assert_eq!(false, BinomialTree::is_greater_or_equall(&bt1, &bt2));
-    /// assert_eq!(true, BinomialTree::is_greater_or_equall(&bt2, &bt1));
+    /// assert_eq!(false, BinomialTree::is_greater_or_equal(&bt1, &bt2));
+    /// assert_eq!(true, BinomialTree::is_greater_or_equal(&bt2, &bt1));
     /// ```
-    pub fn is_greater_or_equall(first: &BinomialTree<T>, other: &BinomialTree<T>) -> bool {
+    pub fn is_greater_or_equal(first: &BinomialTree<T>, other: &BinomialTree<T>) -> bool {
         match (first.peek_payload(), other.peek_payload()) {
             (Some(payload1), Some(payload2)) => payload1 >= payload2,
             _ => panic!("Payloads can not be None"), // if one of the payloads or both of them are None
@@ -282,7 +282,7 @@ impl<T: std::cmp::Ord> BinomialTree<T> {
         &mut self.children
     }
 
-    /// Returns an immutable reference to vector of childre
+    /// Returns an immutable reference to vector of children
     pub fn children(&self) -> &Vec<Option<BinomialTree<T>>> {
         &self.children
     }

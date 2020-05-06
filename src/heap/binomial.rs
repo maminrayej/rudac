@@ -394,9 +394,9 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
                     // 1- heap is a min heap and current node has a smaller root than the candidate
                     // 2- heap is a max heap and current node has a larger root than the candidate
                     if (self.is_min()
-                        && BinomialTree::is_smaller_or_equall(&node, largest_priority_node))
+                        && BinomialTree::is_smaller_or_equal(&node, largest_priority_node))
                         || (self.is_max()
-                            && BinomialTree::is_greater_or_equall(&node, largest_priority_node))
+                            && BinomialTree::is_greater_or_equal(&node, largest_priority_node))
                     {
                         candidate_index = i; // update candidate index
                     }

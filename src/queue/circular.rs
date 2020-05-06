@@ -304,7 +304,7 @@ mod tests {
     fn enqueue_on_capacity_zero() {
         let mut vc: Circular<String> = Circular::new(0);
 
-        vc.enqueue(String::from("elemen1"));
+        vc.enqueue(String::from("element1"));
 
         assert_eq!(vc.push_enabled, true);
         assert_eq!(vc.front_index, 0);
@@ -501,12 +501,12 @@ mod tests {
 
         match vc.dequeue() {
             Some(elem) => assert_eq!(*elem, 1),
-            None => panic!("Element sould not be None!"),
+            None => panic!("Element should not be None!"),
         }
 
         match vc.dequeue() {
             Some(elem) => assert_eq!(*elem, 2),
-            None => panic!("Element sould not be None!"),
+            None => panic!("Element should not be None!"),
         }
     }
 
@@ -546,7 +546,7 @@ mod tests {
     }
 
     #[test]
-    fn index_trait_rear_berfore_front() {
+    fn index_trait_rear_before_front() {
         let mut vc: Circular<String> = Circular::new(2);
 
         vc.enqueue(String::from("element1"));
@@ -635,12 +635,12 @@ mod tests {
 
         match vc.dequeue() {
             Some(elem) => assert_eq!(*elem, String::from("element3")),
-            None => panic!("Element sould not be None!"),
+            None => panic!("Element should not be None!"),
         }
 
         match vc.dequeue() {
             Some(elem) => assert_eq!(*elem, String::from("element4")),
-            None => panic!("Element sould not be None!"),
+            None => panic!("Element should not be None!"),
         }
     }
 
@@ -665,7 +665,7 @@ mod tests {
         let vc: Circular<String> = Circular::new(2);
 
         for _ in &vc {
-            panic!("Loop sould not get executed");
+            panic!("Loop should not get executed");
         }
     }
 
