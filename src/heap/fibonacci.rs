@@ -261,18 +261,43 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
         fibonacci_heap_1
     }
 
+    pub fn pop(&mut self) -> Option<T> {
+        if self.is_empty() {
+            return None;
+        }
+
+        let mut min_node = self.min_pointer.take().unwrap();
+
+        self.size -= 1;
+        let mut next = min_node.children_list.pop_front();
+
+        while !next.is_none() {
+            let child = next.unwrap();
+
+            self.children_list.push_back(child);
+
+            next = min_node.children_list.pop_front();
+        }
+
+        let payload = min_node.get_payload();
+
+        if !self.is_empty() {
+            self.min_pointer = self.children_list.pop_front();
+
+            self.consolidate();
+        }
+
+        Some(payload)
+    }
+
     fn consolidate(&mut self) {
         // there is nothing to consolidate
         if self.is_empty() {
             return;
         }
 
-        println!("Consolidate\n");
-
         // array size will be log(heap size) with base 1.61803
         let array_size = ((self.size as f32).log(1.61803_f32) + 1.0) as usize;
-
-        println!("array_size = {}", array_size);
 
         let mut a: Vec<Option<InternalTree<T>>> = Vec::with_capacity(array_size);
 
@@ -282,7 +307,8 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
         }
 
         // add min node to children list
-        self.children_list.push_front(self.min_pointer.take().unwrap());
+        self.children_list
+            .push_front(self.min_pointer.take().unwrap());
 
         let mut next = self.children_list.pop_front();
 
@@ -290,11 +316,8 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
             let mut x = next.unwrap();
             let mut d = x.degree();
             while !a[d].is_none() {
-    
                 let y = a[d].take().unwrap();
-    
                 x = InternalTree::merge(x, y);
-    
                 d += 1;
             }
             a[d] = Some(x);
@@ -308,9 +331,11 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
             if !a[i].is_none() {
                 if self.min_pointer.is_none() {
                     self.min_pointer = a[i].take();
-                }
-                else {
-                    if InternalTree::is_smaller_or_equal(&a[i].as_ref().unwrap(), &self.min_pointer.as_ref().unwrap()) {
+                } else {
+                    if InternalTree::is_smaller_or_equal(
+                        &a[i].as_ref().unwrap(),
+                        &self.min_pointer.as_ref().unwrap(),
+                    ) {
                         let temp = self.min_pointer.take().unwrap();
                         self.min_pointer = a[i].take();
                         self.children_list.push_back(temp);
@@ -320,12 +345,14 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
                 }
             }
         }
-
-        println!("End Consolidate\n");
     }
 
     pub fn is_empty(&self) -> bool {
         self.size == 0
+    }
+
+    pub fn size(&self) -> usize {
+        self.size
     }
 }
 
@@ -471,7 +498,7 @@ mod fibonacci_heap_tests {
     #[test]
     fn heap_fibonacci_consolidate_2() {
         let mut fh: FibonacciHeap<usize> = FibonacciHeap::init();
-        fh.push(1);        
+        fh.push(1);
         fh.push(0);
 
         fh.consolidate();
@@ -482,19 +509,22 @@ mod fibonacci_heap_tests {
     #[test]
     fn heap_fibonacci_consolidate_3() {
         let mut fh: FibonacciHeap<usize> = FibonacciHeap::init();
-        fh.push(1);        
+        fh.push(1);
         fh.push(0);
         fh.push(2);
 
         fh.consolidate();
 
-        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Min: 0 1\nTree 1: 2\n"));
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Min: 0 1\nTree 1: 2\n")
+        );
     }
 
     #[test]
     fn heap_fibonacci_consolidate_4() {
         let mut fh: FibonacciHeap<usize> = FibonacciHeap::init();
-        fh.push(1);        
+        fh.push(1);
         fh.push(0);
         fh.push(2);
         fh.push(3);
@@ -507,7 +537,7 @@ mod fibonacci_heap_tests {
     #[test]
     fn heap_fibonacci_consolidate_5() {
         let mut fh: FibonacciHeap<usize> = FibonacciHeap::init();
-        fh.push(1);        
+        fh.push(1);
         fh.push(0);
         fh.push(3);
         fh.push(2);
@@ -515,7 +545,10 @@ mod fibonacci_heap_tests {
 
         fh.consolidate();
 
-        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Min: 0 1 2 3\nTree 1: 4\n"));
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Min: 0 1 2 3\nTree 1: 4\n")
+        );
     }
 
     #[test]
@@ -527,6 +560,128 @@ mod fibonacci_heap_tests {
 
         fh.consolidate();
 
-        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Min: 0 1 2 3 4 5 6 7\nTree 1: 12 13\nTree 2: 8 9 10 11\n"));
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Min: 0 1 2 3 4 5 6 7\nTree 1: 12 13\nTree 2: 8 9 10 11\n")
+        );
     }
+
+    #[test]
+    fn heap_fibonacci_pop_1() {
+        let mut fh: FibonacciHeap<usize> = FibonacciHeap::init();
+        fh.push(0);
+
+        assert_eq!(fh.pop(), Some(0));
+
+        assert_eq!(FibonacciHeap::preorder(&fh), String::from(""));
+    }
+
+    #[test]
+    fn heap_fibonacci_pop_2() {
+        let mut fh: FibonacciHeap<usize> = FibonacciHeap::init();
+        fh.push(0);
+        fh.push(1);
+
+        assert_eq!(fh.pop(), Some(0));
+        assert_eq!(fh.size(), 1);
+        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Min: 1\n"));
+    }
+
+    #[test]
+    fn heap_fibonacci_pop_3() {
+        let mut fh: FibonacciHeap<usize> = FibonacciHeap::init();
+        fh.push(2);
+        fh.push(0);
+        fh.push(1);
+
+        assert_eq!(fh.pop(), Some(0));
+        assert_eq!(fh.size(), 2);
+        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Min: 1 2\n"));
+    }
+
+    #[test]
+    fn heap_fibonacci_pop_4() {
+        let mut fh: FibonacciHeap<usize> = FibonacciHeap::init();
+        fh.push(2);
+        fh.push(3);
+        fh.push(0);
+        fh.push(1);
+
+        assert_eq!(fh.pop(), Some(0));
+        assert_eq!(fh.size(), 3);
+        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Min: 1\nTree 1: 2 3\n"));
+    }
+
+    #[test]
+    fn heap_fibonacci_pop_multi_1() {
+        let mut fh: FibonacciHeap<usize> = FibonacciHeap::init();
+        fh.push(2);
+        fh.push(3);
+        fh.push(0);
+        fh.push(1);
+
+        assert_eq!(fh.pop(), Some(0));
+        assert_eq!(fh.size(), 3);
+
+        assert_eq!(fh.pop(), Some(1));
+        assert_eq!(fh.size(), 2);
+        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Min: 2 3\n"));
+
+        assert_eq!(fh.pop(), Some(2));
+        assert_eq!(fh.size(), 1);
+        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Min: 3\n"));
+
+        assert_eq!(fh.pop(), Some(3));
+        assert_eq!(fh.size(), 0);
+        assert_eq!(FibonacciHeap::preorder(&fh), String::from(""));
+
+        assert_eq!(fh.pop(), None);
+        assert_eq!(fh.size(), 0);
+        assert_eq!(FibonacciHeap::preorder(&fh), String::from(""));
+    }
+
+    #[test]
+    fn heap_fibonacci_pop_multi_2() {
+        let mut fh: FibonacciHeap<usize> = FibonacciHeap::init();
+        for i in 0..5 {
+            fh.push(i)
+        }
+        
+        assert_eq!(fh.pop(), Some(0));
+        assert_eq!(fh.size(), 4);
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Min: 1 2 3 4\n")
+        );
+
+        assert_eq!(fh.pop(), Some(1));
+        assert_eq!(fh.size(), 3);
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Min: 2\nTree 1: 3 4\n")
+        );
+
+        assert_eq!(fh.pop(), Some(2));
+        assert_eq!(fh.size(), 2);
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Min: 3 4\n")
+        );
+
+        assert_eq!(fh.pop(), Some(3));
+        assert_eq!(fh.size(), 1);
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Min: 4\n")
+        );
+
+        assert_eq!(fh.pop(), Some(4));
+        assert_eq!(fh.size(), 0);
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("")
+        );
+    }
+
+
 }
