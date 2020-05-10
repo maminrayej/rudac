@@ -9,3 +9,4 @@ Data structures:
 * [Circular Queue / Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer)
 * Binomial Tree
 * [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
+* [Fibonacci Heap](https://en.wikipedia.org/wiki/Fibonacci_heap)
