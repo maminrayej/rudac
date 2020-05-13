@@ -1,30 +1,92 @@
+/// A min-max heap provides constant time retrieval and logarithmic time removal of both the min and max elements in it.
+/// This makes the min-max heap a very useful data structure to implement a double-ended priority queue
+///
+/// # Examples
+/// ```
+/// use rudac::heap::MinMax;
+///
+/// // you can either initialize an empty heap with zero initial capacity
+/// let empty_heap: MinMax<usize> = MinMax::init();
+///
+/// // or an empty heap with initial capacity to reduce relocation
+/// let with_cap_heap: MinMax<usize> = MinMax::with_capacity(128);
+///
+/// // or construct a min-max heap from an existing vector
+/// let built_heap = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 1]);
+///
+/// // inspect max or min values
+/// assert_eq!(*built_heap.peek_min().unwrap(), 1);
+/// assert_eq!(*built_heap.peek_max().unwrap(), 11);
+/// ```
 pub struct MinMax<T: std::cmp::Ord> {
     tree: Vec<T>,
 }
 
 impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
+    /// Initializes a heap with zero capacity
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::heap::MinMax;
+    ///
+    /// let minmax: MinMax<usize> = MinMax::init();
+    ///
+    /// assert_eq!(minmax.capacity(), 0);
+    /// ```
     pub fn init() -> MinMax<T> {
         MinMax { tree: Vec::new() }
     }
 
+    /// Initializes a heap with specified `capacity`
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::heap::MinMax;
+    ///
+    /// let minmax: MinMax<usize> = MinMax::with_capacity(128);
+    ///
+    /// assert_eq!(minmax.capacity(), 128);
+    /// ```
     pub fn with_capacity(capacity: usize) -> MinMax<T> {
         MinMax {
             tree: Vec::with_capacity(capacity),
         }
     }
 
-    pub fn build_heap(arr: Vec<T>) -> MinMax<T> {
-        let mut minmax_heap = MinMax { tree: arr };
+    /// Builds a heap using a bottom-up approach.
+    /// * Complexity: O(n)
+    ///
+    /// # Arguments
+    /// * `vector`: vector to build the heap from
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::heap::MinMax;
+    ///
+    /// let minmax = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 1]);
+    ///
+    /// assert_eq!(*minmax.peek_min().unwrap(), 1);
+    /// assert_eq!(*minmax.peek_max().unwrap(), 11);
+    /// ```
+    pub fn build_heap(vector: Vec<T>) -> MinMax<T> {
+        let mut minmax_heap = MinMax { tree: vector };
 
+        // to achieve O(n) complexity, method must traverse only inner nodes and escape leaves
+        // thus it should iterate over from last inner node till the root
+        // half of the nodes are leaves thus size / 2 shows the position of first leaf(size / 2 ... size are leaves)
         let upper_bound = minmax_heap.size() / 2;
 
         for i in (0..upper_bound).rev() {
+            // push down inner nodes
             minmax_heap.push_down(i);
         }
 
         minmax_heap
     }
 
+    // pushes down a node down the heap
+    // it first determines wether node is one a max level or min level
+    // then calls the appropriate method
     fn push_down(&mut self, index: usize) {
         if is_on_min_level(index) {
             self.push_down_min(index);
@@ -33,27 +95,38 @@ impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
         }
     }
 
+    // pushes down a node that resides on a min level
     fn push_down_min(&mut self, mut index: usize) {
+        // push down the node until heap property is restored
         while has_child(index, self.size()) {
+            // find smallest value in children or grandchildren of the current node
             let (smallest_index, is_grandchild) = self.smallest_child_or_grandchild(index);
+
+            // if smallest node is a grandchild of the current node, we must take care of the child of the current node
+            // on the other hand if smallest node is the direct child of the current node, just swap them
             if is_grandchild {
                 if self.tree[smallest_index] < self.tree[index] {
                     self.tree.swap(smallest_index, index);
 
+                    // because smallest index refers to a grandchild of current node, swapping them *may* invalidate the heap property
+                    // parent of the specified grandchild might be smaller than the current node(which is swapped)
+                    // thus after swapping we must check wether parent of the node referred by smallest index is smaller than it or not
                     if self.tree[smallest_index] > self.tree[parent(smallest_index)] {
                         self.tree.swap(smallest_index, parent(smallest_index));
                     }
                 }
             } else {
+                // just swap the parent and child
                 if self.tree[smallest_index] < self.tree[index] {
                     self.tree.swap(index, smallest_index);
                 }
             }
-
+            // iterate until heap property is restored
             index = smallest_index;
         }
     }
 
+    // it's like push_down_min
     fn push_down_max(&mut self, mut index: usize) {
         while has_child(index, self.size()) {
             let (greatest_index, is_grandchild) = self.greatest_child_or_grandchild(index);
@@ -74,6 +147,8 @@ impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
         }
     }
 
+    // finds the smallest node among children and grandchildren of the node referenced by `index`
+    // returns the index of the smallest node and also returns true if that node is a grandchild and false if it's a child
     fn smallest_child_or_grandchild(&self, index: usize) -> (usize, bool) {
         // check left sub tree
         if has_left_child(index, self.size()) {
@@ -81,7 +156,6 @@ impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
 
             let mut smallest_index = left_child_index;
             let mut is_grandchild = false;
-
             if self.tree[left_child_index] < self.tree[smallest_index] {
                 smallest_index = left_child_index;
                 is_grandchild = false;
@@ -130,10 +204,12 @@ impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
             }
             (smallest_index, is_grandchild)
         } else {
+            // node does not have any child
             (index, false)
         }
     }
 
+    // it's like smallest_child_or_grandchild
     fn greatest_child_or_grandchild(&self, index: usize) -> (usize, bool) {
         // check left sub tree
         if has_left_child(index, self.size()) {
@@ -193,33 +269,67 @@ impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
         }
     }
 
+    /// Pushes an item into the heap
+    /// * Complexity: O(log n)
+    ///
+    /// # Arguments
+    /// * `item`: data to be pushed into the heap
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::heap::MinMax;
+    ///
+    /// let mut minmax: MinMax<usize> = MinMax::init();
+    ///
+    /// minmax.push(10);
+    /// minmax.push(5);
+    /// minmax.push(1);
+    /// minmax.push(4);
+    /// minmax.push(3);
+    /// minmax.push(12);
+    ///
+    /// assert_eq!(*minmax.peek_min().unwrap(), 1);
+    /// assert_eq!(*minmax.peek_max().unwrap(), 12);
+    /// ```
     pub fn push(&mut self, item: T) {
+        // append the data at end of the heap
         self.tree.push(item);
 
+        // bubble up the node until heap property is restored
         self.push_up(self.tree.len() - 1);
     }
 
+    // bubbles up a node until heap property is restored
     fn push_up(&mut self, index: usize) {
+        // nodes other than root can be pushed up
         if index != 0 {
             if is_on_min_level(index) {
+                // if node is on a min level but is greater than its parent, node can replace its parent
+                // parent must be pushed up as a max node
                 if self.tree[index] > self.tree[parent(index)] {
                     self.tree.swap(index, parent(index));
                     self.push_up_max(parent(index));
                 } else {
+                    // push up the node as a min node
                     self.push_up_min(index);
                 }
             } else {
+                // if node is on a max level but is smaller than its parent, node can replace its parent
+                // parent must be pushed up as a min node
                 if self.tree[index] < self.tree[parent(index)] {
                     self.tree.swap(index, parent(index));
                     self.push_up_min(parent(index));
                 } else {
+                    // push up the node as a max node
                     self.push_up_max(index);
                 }
             }
         }
     }
 
+    // bubbles up a node until heap property is restored
     fn push_up_min(&mut self, mut index: usize) {
+        // until node is smaller than its grandparent, swap them and iterate to the top of the heap
         while has_grandparent(index) && self.tree[index] < self.tree[grandparent(index)] {
             self.tree.swap(index, grandparent(index));
 
@@ -227,7 +337,9 @@ impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
         }
     }
 
+    // bubbles up a node until heap property is restored
     fn push_up_max(&mut self, mut index: usize) {
+        // until node is greater than its grandparent, swap them and iterate to the top of the heap
         while has_grandparent(index) && self.tree[index] > self.tree[grandparent(index)] {
             self.tree.swap(index, grandparent(index));
 
@@ -235,6 +347,17 @@ impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
         }
     }
 
+    /// Returns a reference to the min value. returns None if heap is empty
+    /// * Complexity: O(1)
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::heap::MinMax;
+    ///
+    /// let minmax = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 1]);
+    ///
+    /// assert_eq!(*minmax.peek_min().unwrap(), 1);
+    /// ```
     pub fn peek_min(&self) -> Option<&T> {
         if self.is_empty() {
             return None;
@@ -243,16 +366,24 @@ impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
         Some(&self.tree[0])
     }
 
+    /// Returns a reference to the max value. returns None if heap is empty
+    /// * Complexity: O(1)
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::heap::MinMax;
+    ///
+    /// let minmax = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 1]);
+    ///
+    /// assert_eq!(*minmax.peek_max().unwrap(), 11);
+    /// ```
     pub fn peek_max(&self) -> Option<&T> {
-        if self.is_empty() {
-            return None;
-        }
-
         match self.size() {
-            0 => None,
-            1 => Some(&self.tree[0]),
-            2 => Some(&self.tree[1]),
+            0 => None,                // if heap is empty return None
+            1 => Some(&self.tree[0]), // if there is only one item, it is max
+            2 => Some(&self.tree[1]), // if there are only two item, item at index 1 is max
             _ => {
+                // if there are more than 2 items, max is either at index 1 or 2
                 if self.tree[1] > self.tree[2] {
                     Some(&self.tree[1])
                 } else {
@@ -262,31 +393,56 @@ impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
         }
     }
 
+    /// Pops min value from heap and returns it. returns None if heap is empty
+    /// * Complexity: O(log n)
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::heap::MinMax;
+    ///
+    /// let mut minmax = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 1]);
+    ///
+    /// assert_eq!(minmax.pop_min().unwrap(), 1);
+    /// assert_eq!(*minmax.peek_min().unwrap(), 2);
+    /// ```
     pub fn pop_min(&mut self) -> Option<T> {
         match self.size() {
-            0 => None,
-            1 => Some(self.tree.pop().unwrap()),
+            0 => None,                           // if heap is empty return None
+            1 => Some(self.tree.pop().unwrap()), // if there is only one item, it is min
             _ => {
-                let mut last_item = self.tree.pop().unwrap();
+                let mut last_item = self.tree.pop().unwrap(); // pop last leaf
 
-                std::mem::swap(&mut last_item, &mut self.tree[0]);
-                self.push_down(0);
-                Some(last_item)
+                std::mem::swap(&mut last_item, &mut self.tree[0]); // swap min with leaf
+                self.push_down(0); // push down the leaf until heap property is restored
+                Some(last_item) // return min node
             }
         }
     }
 
+    /// Pops max value from heap and returns it. returns None if heap is empty
+    /// * Complexity: O(log n)
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::heap::MinMax;
+    ///
+    /// let mut minmax = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 1]);
+    ///
+    /// assert_eq!(minmax.pop_max().unwrap(), 11);
+    /// assert_eq!(*minmax.peek_max().unwrap(), 9);
+    /// ```
     pub fn pop_max(&mut self) -> Option<T> {
         match self.size() {
-            0 => None,
-            1 | 2 => Some(self.tree.pop().unwrap()),
+            0 => None,                               // if heap is empty, return None
+            1 | 2 => Some(self.tree.pop().unwrap()), // if there are only 1 or 2 item, max is at the end of the heap
             _ => {
+                // if there are more than 2 items, max is at index 1 or 2
                 let mut last_item: T;
 
                 if self.tree[1] > self.tree[2] {
-                    last_item = self.tree.pop().unwrap();
-                    std::mem::swap(&mut last_item, &mut self.tree[1]);
-                    self.push_down(1);
+                    last_item = self.tree.pop().unwrap(); // pop last leaf
+                    std::mem::swap(&mut last_item, &mut self.tree[1]); // swap max with leaf
+                    self.push_down(1); // push down leaf until heap property is restored
                 } else {
                     last_item = self.tree.pop().unwrap();
                     std::mem::swap(&mut last_item, &mut self.tree[2]);
@@ -298,78 +454,162 @@ impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
         }
     }
 
+    /// Pops and returns the min value and pushes the `item` into heap without allocating.
+    /// * Complexity: O(log n)
+    ///
+    /// # Arguments
+    /// * `item`: data to be pushed into the heap
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::heap::MinMax;
+    ///
+    /// let mut minmax = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 0]);
+    ///
+    /// assert_eq!(minmax.push_pop_min(13).unwrap(), 0);
+    /// assert_eq!(*minmax.peek_min().unwrap(), 2);
+    /// assert_eq!(*minmax.peek_max().unwrap(), 13);
+    /// ```
     pub fn push_pop_min(&mut self, mut item: T) -> Option<T> {
+        // if heap is empty or item is already smaller than min value in heap,
+        // nothing should be done just return the item
         if self.is_empty() || item < self.tree[0] {
             return Some(item);
         }
 
+        // swap the min value with item
         std::mem::swap(&mut item, &mut self.tree[0]);
 
+        // push down item until heap property is restored
         self.push_down(0);
 
+        // return min
         return Some(item);
     }
 
+    /// Pops and returns the max value and pushes the `item` into heap without allocating.
+    /// * Complexity: O(log n)
+    ///
+    /// # Arguments
+    /// * `item`: data to be pushed into the heap
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::heap::MinMax;
+    ///
+    /// let mut minmax = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 1]);
+    ///
+    /// assert_eq!(minmax.push_pop_max(0).unwrap(), 11);
+    /// assert_eq!(*minmax.peek_min().unwrap(), 0);
+    /// assert_eq!(*minmax.peek_max().unwrap(), 9);
+    /// ```
     pub fn push_pop_max(&mut self, mut item: T) -> Option<T> {
         match self.size() {
-            0 => Some(item),
+            0 => Some(item), // if heap is empty just return the item
             _ => {
-                let max_index = self.find_max_index();
+                let max_index = self.find_max_index(); // find index of maximum value in heap
 
+                // if item is already greater than the max value in heap, just return the item
                 if item > self.tree[max_index] {
                     Some(item)
                 } else {
                     std::mem::swap(&mut item, &mut self.tree[max_index]);
 
+                    // check if `item` is smaller than root
                     if self.tree[max_index] < self.tree[0] {
                         self.tree.swap(max_index, 0);
                     }
-
+                    // push down item(or previous root) to restore heap property
                     self.push_down(max_index);
 
+                    // return max
                     Some(item)
                 }
             }
         }
     }
 
+    /// Pops and returns the min value and pushes the `item` into heap without allocating.
+    /// * Complexity: O(log n)
+    ///
+    /// # Arguments
+    /// * `item`: data to be pushed into the heap
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::heap::MinMax;
+    ///
+    /// let mut minmax: MinMax<usize> = MinMax::build_heap(vec![3, 2, 1]);
+    ///     
+    /// assert_eq!(minmax.replace_min(4).unwrap(), 1);
+    /// assert_eq!(*minmax.peek_min().unwrap(), 2);
+    /// assert_eq!(*minmax.peek_max().unwrap(), 4);
+    /// ```
     pub fn replace_min(&mut self, mut item: T) -> Option<T> {
+        // if heap is empty just push the item
         if self.is_empty() {
             self.push(item);
             return None;
         }
 
+        // replace min with item
         std::mem::swap(&mut item, &mut self.tree[0]);
 
+        // push down item until heap property is restored
         self.push_down(0);
 
+        // return min
         Some(item)
     }
 
+    /// Pops and returns the max value and pushes the `item` into heap without allocating.
+    /// * Complexity: O(log n)
+    ///
+    /// # Arguments
+    /// * `item`: data to be pushed into the heap
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::heap::MinMax;
+    ///
+    /// let mut minmax: MinMax<usize> = MinMax::build_heap(vec![3, 2, 1]);
+    ///
+    /// assert_eq!(minmax.replace_max(4).unwrap(), 3);
+    /// assert_eq!(*minmax.peek_min().unwrap(), 1);
+    /// assert_eq!(*minmax.peek_max().unwrap(), 4);
+    /// ```
     pub fn replace_max(&mut self, mut item: T) -> Option<T> {
+        // if heap is empty just push the item
         if self.is_empty() {
             self.push(item);
             return None;
         }
 
+        // find index of node with max value
         let max_index = self.find_max_index();
 
+        // swap max value with item
         std::mem::swap(&mut item, &mut self.tree[max_index]);
 
+        // check if item is smaller than root
         if self.tree[max_index] < self.tree[0] {
             self.tree.swap(max_index, 0);
         }
 
+        // push down item(or previous root) until heap property is restored
         self.push_down(max_index);
 
+        // return max
         Some(item)
     }
+    // find index of node with maximum value
     fn find_max_index(&self) -> usize {
         match self.size() {
             0 => panic!("There is no item is the heap."),
-            1 => 0,
-            2 => 1,
+            1 => 0, // if there is only one item, it's max
+            2 => 1, // if there are only two items, max has index 1
             _ => {
+                // if there are more than 2 items in heap, max is in index 1 or 2
                 if self.tree[1] > self.tree[2] {
                     1
                 } else {
@@ -379,34 +619,42 @@ impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
         }
     }
 
+    /// Reserves capacity for `additional` more items to be pushed into heap
     pub fn reserve(&mut self, additional: usize) {
         self.tree.reserve(additional);
     }
 
+    /// Reserves capacity for `additional` more items to be pushed into heap
     pub fn reserve_exact(&mut self, additional: usize) {
         self.tree.reserve_exact(additional);
     }
 
+    /// Shrinks capacity internal vector to fit the existing data 
     pub fn shrink_to_fit(&mut self) {
         self.tree.shrink_to_fit();
     }
 
+    /// Consumes the heap and returns the internal vector
     pub fn into_vec(self) -> Vec<T> {
         self.tree
     }
 
+    /// Total number of elements in the heap
     pub fn size(&self) -> usize {
         self.tree.len()
     }
 
+    /// Returns true if heap is empty, false otherwise
     pub fn is_empty(&self) -> bool {
         self.size() == 0
     }
 
+    /// Clears the internal vector
     pub fn clear(&mut self) {
         self.tree.clear()
     }
 
+    /// Returns capacity of the heap
     pub fn capacity(&self) -> usize {
         self.tree.capacity()
     }
