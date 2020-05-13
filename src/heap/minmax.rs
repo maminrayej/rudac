@@ -2,8 +2,8 @@ pub struct MinMax<T: std::cmp::Ord> {
     tree: Vec<T>,
 }
 
-impl<T: std::cmp::Ord> MinMax<T> {
-    pub fn new() -> MinMax<T> {
+impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
+    pub fn init() -> MinMax<T> {
         MinMax { tree: Vec::new() }
     }
 
@@ -17,7 +17,8 @@ impl<T: std::cmp::Ord> MinMax<T> {
         let mut minmax_heap = MinMax { tree: arr };
 
         let upper_bound = minmax_heap.size() / 2;
-        for i in (1..upper_bound).rev() {
+
+        for i in (0..upper_bound).rev() {
             minmax_heap.push_down(i);
         }
 
@@ -32,7 +33,7 @@ impl<T: std::cmp::Ord> MinMax<T> {
         }
     }
 
-    fn push_down_min(&mut self, index: usize) {
+    fn push_down_min(&mut self, mut index: usize) {
         while has_child(index, self.size()) {
             let (smallest_index, is_grandchild) = self.smallest_child_or_grandchild(index);
             if is_grandchild {
@@ -48,10 +49,12 @@ impl<T: std::cmp::Ord> MinMax<T> {
                     self.tree.swap(index, smallest_index);
                 }
             }
+
+            index = smallest_index;
         }
     }
 
-    fn push_down_max(&mut self, index: usize) {
+    fn push_down_max(&mut self, mut index: usize) {
         while has_child(index, self.size()) {
             let (greatest_index, is_grandchild) = self.greatest_child_or_grandchild(index);
             if is_grandchild {
@@ -67,15 +70,18 @@ impl<T: std::cmp::Ord> MinMax<T> {
                     self.tree.swap(index, greatest_index);
                 }
             }
+            index = greatest_index;
         }
     }
 
     fn smallest_child_or_grandchild(&self, index: usize) -> (usize, bool) {
-        let mut smallest_index = index;
-        let mut is_grandchild = false;
         // check left sub tree
         if has_left_child(index, self.size()) {
             let left_child_index = left_child(index);
+
+            let mut smallest_index = left_child_index;
+            let mut is_grandchild = false;
+
             if self.tree[left_child_index] < self.tree[smallest_index] {
                 smallest_index = left_child_index;
                 is_grandchild = false;
@@ -96,43 +102,46 @@ impl<T: std::cmp::Ord> MinMax<T> {
                     is_grandchild = true;
                 }
             }
-        }
 
-        // check right sub tree
-        if has_right_child(index, self.size()) {
-            let right_child_index = right_child(index);
-            if self.tree[right_child_index] < self.tree[smallest_index] {
-                smallest_index = right_child_index;
-                is_grandchild = false;
-            }
+            // check right sub tree
+            if has_right_child(index, self.size()) {
+                let right_child_index = right_child(index);
+                if self.tree[right_child_index] < self.tree[smallest_index] {
+                    smallest_index = right_child_index;
+                    is_grandchild = false;
+                }
 
-            // check grandchildren of right sub tree
-            if has_left_child(right_child_index, self.size()) {
-                let left_grandchild_index = left_child(right_child_index);
-                if self.tree[left_grandchild_index] < self.tree[smallest_index] {
-                    smallest_index = left_grandchild_index;
-                    is_grandchild = true;
+                // check grandchildren of right sub tree
+                if has_left_child(right_child_index, self.size()) {
+                    let left_grandchild_index = left_child(right_child_index);
+                    if self.tree[left_grandchild_index] < self.tree[smallest_index] {
+                        smallest_index = left_grandchild_index;
+                        is_grandchild = true;
+                    }
+                }
+
+                if has_right_child(right_child_index, self.size()) {
+                    let right_grandchild_index = right_child(right_child_index);
+                    if self.tree[right_grandchild_index] < self.tree[smallest_index] {
+                        smallest_index = right_grandchild_index;
+                        is_grandchild = true;
+                    }
                 }
             }
-            if has_right_child(right_child_index, self.size()) {
-                let right_grandchild_index = right_child(right_child_index);
-                if self.tree[right_grandchild_index] < self.tree[smallest_index] {
-                    smallest_index = right_grandchild_index;
-                    is_grandchild = true;
-                }
-            }
+            (smallest_index, is_grandchild)
+        } else {
+            (index, false)
         }
-
-        (smallest_index, is_grandchild)
     }
 
     fn greatest_child_or_grandchild(&self, index: usize) -> (usize, bool) {
-        let mut greatest_index = index;
-        let mut is_grandchild = false;
-
         // check left sub tree
         if has_left_child(index, self.size()) {
             let left_child_index = left_child(index);
+
+            let mut greatest_index = left_child_index;
+            let mut is_grandchild = false;
+
             if self.tree[left_child_index] > self.tree[greatest_index] {
                 greatest_index = left_child_index;
                 is_grandchild = false;
@@ -153,34 +162,35 @@ impl<T: std::cmp::Ord> MinMax<T> {
                     is_grandchild = true;
                 }
             }
-        }
 
-        // check right sub tree
-        if has_right_child(index, self.size()) {
-            let right_child_index = right_child(index);
-            if self.tree[right_child_index] > self.tree[greatest_index] {
-                greatest_index = right_child_index;
-                is_grandchild = false;
-            }
+            // check right sub tree
+            if has_right_child(index, self.size()) {
+                let right_child_index = right_child(index);
+                if self.tree[right_child_index] > self.tree[greatest_index] {
+                    greatest_index = right_child_index;
+                    is_grandchild = false;
+                }
 
-            // check grandchildren of right sub tree
-            if has_left_child(right_child_index, self.size()) {
-                let left_grandchild_index = left_child(right_child_index);
-                if self.tree[left_grandchild_index] > self.tree[greatest_index] {
-                    greatest_index = left_grandchild_index;
-                    is_grandchild = true;
+                // check grandchildren of right sub tree
+                if has_left_child(right_child_index, self.size()) {
+                    let left_grandchild_index = left_child(right_child_index);
+                    if self.tree[left_grandchild_index] > self.tree[greatest_index] {
+                        greatest_index = left_grandchild_index;
+                        is_grandchild = true;
+                    }
+                }
+                if has_right_child(right_child_index, self.size()) {
+                    let right_grandchild_index = right_child(right_child_index);
+                    if self.tree[right_grandchild_index] > self.tree[greatest_index] {
+                        greatest_index = right_grandchild_index;
+                        is_grandchild = true;
+                    }
                 }
             }
-            if has_right_child(right_child_index, self.size()) {
-                let right_grandchild_index = right_child(right_child_index);
-                if self.tree[right_grandchild_index] > self.tree[greatest_index] {
-                    greatest_index = right_grandchild_index;
-                    is_grandchild = true;
-                }
-            }
+            (greatest_index, is_grandchild)
+        } else {
+            (index, false)
         }
-
-        (greatest_index, is_grandchild)
     }
 
     pub fn push(&mut self, item: T) {
@@ -190,10 +200,22 @@ impl<T: std::cmp::Ord> MinMax<T> {
     }
 
     fn push_up(&mut self, index: usize) {
-        if is_on_min_level(index) {
-            self.push_up_min(index);
-        } else {
-            self.push_up_max(index);
+        if index != 0 {
+            if is_on_min_level(index) {
+                if self.tree[index] > self.tree[parent(index)] {
+                    self.tree.swap(index, parent(index));
+                    self.push_up_max(parent(index));
+                } else {
+                    self.push_up_min(index);
+                }
+            } else {
+                if self.tree[index] < self.tree[parent(index)] {
+                    self.tree.swap(index, parent(index));
+                    self.push_up_min(parent(index));
+                } else {
+                    self.push_up_max(index);
+                }
+            }
         }
     }
 
@@ -261,7 +283,7 @@ impl<T: std::cmp::Ord> MinMax<T> {
             _ => {
                 let mut last_item: T;
 
-                if self.tree[1] < self.tree[2] {
+                if self.tree[1] > self.tree[2] {
                     last_item = self.tree.pop().unwrap();
                     std::mem::swap(&mut last_item, &mut self.tree[1]);
                     self.push_down(1);
@@ -298,6 +320,12 @@ impl<T: std::cmp::Ord> MinMax<T> {
                     Some(item)
                 } else {
                     std::mem::swap(&mut item, &mut self.tree[max_index]);
+
+                    if self.tree[max_index] < self.tree[0] {
+                        self.tree.swap(max_index, 0);
+                    }
+
+                    self.push_down(max_index);
 
                     Some(item)
                 }
@@ -336,32 +364,31 @@ impl<T: std::cmp::Ord> MinMax<T> {
 
         Some(item)
     }
-
-    pub fn reserve(&mut self, additional: usize) {
-        self.tree.reserve(additional);
-    }
-
-    pub fn reserve_exact(&mut self, additional: usize) {
-        self.tree.reserve(additional);
-    }
-
-    pub fn shrink_to_fit(&mut self) {
-        self.tree.shrink_to_fit();
-    }
-
     fn find_max_index(&self) -> usize {
         match self.size() {
             0 => panic!("There is no item is the heap."),
             1 => 0,
             2 => 1,
             _ => {
-                if self.tree[1] < self.tree[2] {
+                if self.tree[1] > self.tree[2] {
                     1
                 } else {
                     2
                 }
             }
         }
+    }
+
+    pub fn reserve(&mut self, additional: usize) {
+        self.tree.reserve(additional);
+    }
+
+    pub fn reserve_exact(&mut self, additional: usize) {
+        self.tree.reserve_exact(additional);
+    }
+
+    pub fn shrink_to_fit(&mut self) {
+        self.tree.shrink_to_fit();
     }
 
     pub fn into_vec(self) -> Vec<T> {
@@ -393,9 +420,9 @@ fn has_grandparent(index: usize) -> bool {
     index > 2
 }
 
-fn has_parent(index: usize) -> bool {
-    index > 0
-}
+// fn has_parent(index: usize) -> bool {
+//     index > 0
+// }
 
 fn has_left_child(index: usize, size: usize) -> bool {
     (2 * (index + 1)) - 1 < size
@@ -534,5 +561,349 @@ mod tests {
         assert_eq!(right_child(3), 8);
         assert_eq!(right_child(4), 10);
         assert_eq!(right_child(5), 12);
+    }
+
+    #[test]
+    fn heap_minmax_init() {
+        let minmax: MinMax<usize> = MinMax::init();
+
+        assert_eq!(minmax.size(), 0);
+        assert_eq!(minmax.is_empty(), true);
+        assert_eq!(minmax.capacity(), 0);
+    }
+
+    #[test]
+    fn heap_minmax_with_capacity() {
+        let minmax: MinMax<usize> = MinMax::with_capacity(10);
+
+        assert_eq!(minmax.is_empty(), true);
+        assert_eq!(minmax.size(), 0);
+        assert_eq!(minmax.capacity(), 10);
+    }
+
+    #[test]
+    fn heap_minmax_smallest_child_or_grandchild_1() {
+        let mut minmax: MinMax<usize> = MinMax::init();
+
+        minmax.tree = vec![0, 5, 4, 3, 4, 1];
+
+        assert_eq!(minmax.smallest_child_or_grandchild(0), (5, true));
+        assert_eq!(minmax.smallest_child_or_grandchild(1), (3, false));
+        assert_eq!(minmax.smallest_child_or_grandchild(2), (5, false));
+        assert_eq!(minmax.smallest_child_or_grandchild(3), (3, false));
+        assert_eq!(minmax.smallest_child_or_grandchild(4), (4, false));
+        assert_eq!(minmax.smallest_child_or_grandchild(5), (5, false));
+    }
+
+    #[test]
+    fn heap_minmax_greatest_child_or_grandchild_1() {
+        let mut minmax: MinMax<usize> = MinMax::init();
+
+        minmax.tree = vec![0, 5, 4, 3, 4, 1];
+
+        assert_eq!(minmax.greatest_child_or_grandchild(0), (1, false));
+        assert_eq!(minmax.greatest_child_or_grandchild(1), (4, false));
+        assert_eq!(minmax.greatest_child_or_grandchild(2), (5, false));
+        assert_eq!(minmax.greatest_child_or_grandchild(3), (3, false));
+        assert_eq!(minmax.greatest_child_or_grandchild(4), (4, false));
+        assert_eq!(minmax.greatest_child_or_grandchild(5), (5, false));
+    }
+
+    #[test]
+    fn heap_minmax_push_down_1() {
+        let mut minmax: MinMax<usize> = MinMax::init();
+
+        minmax.tree = vec![0, 5, 4, 3, 4, 1];
+
+        minmax.tree[0] = 6;
+        minmax.push_down(0);
+        assert_eq!(
+            format!("{:?}", minmax.tree),
+            String::from("[1, 5, 6, 3, 4, 4]")
+        );
+
+        minmax.tree[0] = 7;
+        minmax.push_down(0);
+        assert_eq!(
+            format!("{:?}", minmax.tree),
+            String::from("[3, 7, 6, 5, 4, 4]")
+        );
+    }
+
+    #[test]
+    fn heap_minmax_build_heap_1() {
+        let minmax = MinMax::build_heap(vec![1, 3, 0, 6, 8, 2, 4]);
+
+        assert_eq!(minmax.size(), 7);
+        assert_eq!(
+            format!("{:?}", minmax.tree),
+            String::from("[0, 8, 4, 6, 3, 2, 1]")
+        );
+    }
+
+    #[test]
+    fn heap_minmax_build_heap_2() {
+        let minmax = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 0]);
+
+        assert_eq!(minmax.size(), 10);
+        assert_eq!(
+            format!("{:?}", minmax.tree),
+            String::from("[0, 9, 11, 3, 4, 5, 2, 6, 7, 8]")
+        );
+    }
+
+    #[test]
+    fn heap_minmax_peek_min_1() {
+        let minmax: MinMax<usize> = MinMax::init();
+
+        assert_eq!(minmax.peek_min(), None);
+    }
+
+    #[test]
+    fn heap_minmax_peek_min_2() {
+        let mut minmax: MinMax<usize> = MinMax::init();
+
+        minmax.push(0);
+
+        assert_eq!(*minmax.peek_min().unwrap(), 0);
+    }
+
+    #[test]
+    fn heap_minmax_peek_min_3() {
+        let mut minmax: MinMax<usize> = MinMax::init();
+
+        minmax.push(10);
+        minmax.push(0);
+
+        assert_eq!(*minmax.peek_min().unwrap(), 0);
+    }
+
+    #[test]
+    fn heap_minmax_peek_max_1() {
+        let minmax: MinMax<usize> = MinMax::init();
+
+        assert_eq!(minmax.peek_max(), None);
+    }
+
+    #[test]
+    fn heap_minmax_peek_max_2() {
+        let mut minmax: MinMax<usize> = MinMax::init();
+
+        minmax.push(0);
+
+        assert_eq!(*minmax.peek_max().unwrap(), 0);
+    }
+
+    #[test]
+    fn heap_minmax_peek_max_3() {
+        let mut minmax: MinMax<usize> = MinMax::init();
+
+        minmax.push(10);
+        minmax.push(0);
+
+        assert_eq!(*minmax.peek_max().unwrap(), 10);
+    }
+
+    #[test]
+    fn heap_minmax_peek_max_4() {
+        let mut minmax: MinMax<usize> = MinMax::init();
+
+        minmax.push(10);
+        minmax.push(0);
+        minmax.push(20);
+
+        assert_eq!(*minmax.peek_max().unwrap(), 20);
+    }
+
+    #[test]
+    fn heap_minmax_push_1() {
+        let mut minmax: MinMax<usize> = MinMax::init();
+
+        minmax.push(10);
+
+        assert_eq!(*minmax.peek_min().unwrap(), 10);
+        assert_eq!(*minmax.peek_max().unwrap(), 10);
+    }
+
+    #[test]
+    fn heap_minmax_push_2() {
+        let mut minmax: MinMax<usize> = MinMax::init();
+
+        minmax.push(10);
+        minmax.push(5);
+        minmax.push(1);
+        minmax.push(4);
+        minmax.push(3);
+        minmax.push(12);
+
+        assert_eq!(*minmax.peek_min().unwrap(), 1);
+        assert_eq!(*minmax.peek_max().unwrap(), 12);
+    }
+
+    #[test]
+    fn heap_minmax_pop_min() {
+        let mut minmax = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 0]);
+
+        assert_eq!(*minmax.peek_min().unwrap(), 0);
+
+        minmax.pop_min();
+        assert_eq!(*minmax.peek_min().unwrap(), 2);
+
+        minmax.pop_min();
+        assert_eq!(*minmax.peek_min().unwrap(), 3);
+
+        minmax.pop_min();
+        assert_eq!(*minmax.peek_min().unwrap(), 4);
+
+        minmax.pop_min();
+        assert_eq!(*minmax.peek_min().unwrap(), 5);
+
+        minmax.pop_min();
+        assert_eq!(*minmax.peek_min().unwrap(), 6);
+
+        minmax.pop_min();
+        assert_eq!(*minmax.peek_min().unwrap(), 7);
+
+        minmax.pop_min();
+        assert_eq!(*minmax.peek_min().unwrap(), 8);
+
+        minmax.pop_min();
+        assert_eq!(*minmax.peek_min().unwrap(), 9);
+
+        minmax.pop_min();
+        assert_eq!(*minmax.peek_min().unwrap(), 11);
+
+        minmax.pop_min();
+        assert_eq!(minmax.peek_min(), None);
+    }
+
+    #[test]
+    fn heap_minmax_pop_max() {
+        let mut minmax = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 0]);
+
+        assert_eq!(*minmax.peek_max().unwrap(), 11);
+
+        minmax.pop_max();
+        assert_eq!(*minmax.peek_max().unwrap(), 9);
+
+        minmax.pop_max();
+        assert_eq!(*minmax.peek_max().unwrap(), 8);
+
+        minmax.pop_max();
+        assert_eq!(*minmax.peek_max().unwrap(), 7);
+
+        minmax.pop_max();
+        assert_eq!(*minmax.peek_max().unwrap(), 6);
+
+        minmax.pop_max();
+        assert_eq!(*minmax.peek_max().unwrap(), 5);
+
+        minmax.pop_max();
+        assert_eq!(*minmax.peek_max().unwrap(), 4);
+
+        minmax.pop_max();
+        assert_eq!(*minmax.peek_max().unwrap(), 3);
+
+        minmax.pop_max();
+        assert_eq!(*minmax.peek_max().unwrap(), 2);
+
+        minmax.pop_max();
+        assert_eq!(*minmax.peek_max().unwrap(), 0);
+
+        minmax.pop_max();
+        assert_eq!(minmax.peek_max(), None);
+    }
+
+    #[test]
+    fn heap_minmax_push_pop_min_1() {
+        let mut minmax = MinMax::init();
+
+        assert_eq!(minmax.push_pop_min(1).unwrap(), 1);
+    }
+
+    #[test]
+    fn heap_minmax_push_pop_min_2() {
+        let mut minmax = MinMax::init();
+        minmax.push(2);
+
+        assert_eq!(minmax.push_pop_min(1).unwrap(), 1);
+    }
+
+    #[test]
+    fn heap_minmax_push_pop_min_3() {
+        let mut minmax = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 0]);
+
+        assert_eq!(minmax.push_pop_min(13).unwrap(), 0);
+        assert_eq!(*minmax.peek_min().unwrap(), 2);
+        assert_eq!(*minmax.peek_max().unwrap(), 13);
+    }
+
+    #[test]
+    fn heap_minmax_push_pop_max_1() {
+        let mut minmax = MinMax::init();
+
+        assert_eq!(minmax.push_pop_max(1).unwrap(), 1);
+    }
+
+    #[test]
+    fn heap_minmax_push_pop_max_2() {
+        let mut minmax = MinMax::init();
+        minmax.push(2);
+
+        assert_eq!(minmax.push_pop_max(3).unwrap(), 3);
+    }
+
+    #[test]
+    fn heap_minmax_push_pop_max_3() {
+        let mut minmax = MinMax::build_heap(vec![9, 8, 2, 3, 4, 5, 11, 6, 7, 1]);
+
+        assert_eq!(minmax.push_pop_max(0).unwrap(), 11);
+        assert_eq!(*minmax.peek_min().unwrap(), 0);
+        assert_eq!(*minmax.peek_max().unwrap(), 9);
+    }
+
+    #[test]
+    fn heap_minmax_replace_min_1() {
+        let mut minmax: MinMax<usize> = MinMax::build_heap(vec![]);
+
+        assert_eq!(minmax.replace_min(0), None);
+        assert_eq!(*minmax.peek_min().unwrap(), 0);
+        assert_eq!(*minmax.peek_max().unwrap(), 0);
+    }
+
+    #[test]
+    fn heap_minmax_replace_min_2() {
+        let mut minmax: MinMax<usize> = MinMax::build_heap(vec![3, 2, 1]);
+
+        assert_eq!(minmax.replace_min(4).unwrap(), 1);
+        assert_eq!(*minmax.peek_min().unwrap(), 2);
+        assert_eq!(*minmax.peek_max().unwrap(), 4);
+    }
+
+    #[test]
+    fn heap_minmax_replace_max_1() {
+        let mut minmax: MinMax<usize> = MinMax::build_heap(vec![]);
+
+        assert_eq!(minmax.replace_max(0), None);
+        assert_eq!(*minmax.peek_min().unwrap(), 0);
+        assert_eq!(*minmax.peek_max().unwrap(), 0);
+    }
+
+    #[test]
+    fn heap_minmax_replace_max_2() {
+        let mut minmax: MinMax<usize> = MinMax::build_heap(vec![3, 2, 1]);
+
+        assert_eq!(minmax.replace_max(4).unwrap(), 3);
+        assert_eq!(*minmax.peek_min().unwrap(), 1);
+        assert_eq!(*minmax.peek_max().unwrap(), 4);
+    }
+
+    #[test]
+    fn heap_minmax_replace_max_3() {
+        let mut minmax: MinMax<usize> = MinMax::build_heap(vec![3, 2, 1]);
+
+        assert_eq!(minmax.replace_max(0).unwrap(), 3);
+        assert_eq!(*minmax.peek_min().unwrap(), 0);
+        assert_eq!(*minmax.peek_max().unwrap(), 2);
     }
 }
