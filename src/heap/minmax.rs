@@ -22,7 +22,7 @@ pub struct MinMax<T: std::cmp::Ord> {
     tree: Vec<T>,
 }
 
-impl<T: std::cmp::Ord + std::fmt::Debug> MinMax<T> {
+impl<T: std::cmp::Ord> MinMax<T> {
     /// Initializes a heap with zero capacity
     ///
     /// # Examples
