@@ -10,9 +10,11 @@ Data structures:
 * Binomial Tree
 * [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
 * [Fibonacci Heap](https://en.wikipedia.org/wiki/Fibonacci_heap)
+* [Min-Max Heap](https://en.wikipedia.org/wiki/Min-max_heap)
 
 Todo:
 * "Circular Queue" Wiki
 * "Binomial Heap" Wiki
 * "Fibonacci Heap" Wiki
-* :soon: [Min-Max Heap](https://en.wikipedia.org/wiki/Min-max_heap)
+* "Min-Max Heap" Wiki
+* :soon: [AVL Tree](https://en.wikipedia.org/wiki/AVL_tree)

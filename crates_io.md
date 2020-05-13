@@ -10,3 +10,4 @@ Data structures:
 * Binomial Tree
 * [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
 * [Fibonacci Heap](https://en.wikipedia.org/wiki/Fibonacci_heap)
+* [Min-Max Heap](https://en.wikipedia.org/wiki/Min-max_heap)
