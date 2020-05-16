@@ -5,16 +5,20 @@ It aims to be a comprehensive crate of usefull data structure and algorithms.
 
 It is still an ongoing project.
 
+**Documentation**: https://docs.rs/rudac
+
 Data structures:
 * [Circular Queue / Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer)
 * Binomial Tree
 * [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
 * [Fibonacci Heap](https://en.wikipedia.org/wiki/Fibonacci_heap)
 * [Min-Max Heap](https://en.wikipedia.org/wiki/Min-max_heap)
+* [AVL Tree](https://en.wikipedia.org/wiki/AVL_tree)
 
 Todo:
 * "Circular Queue" Wiki
 * "Binomial Heap" Wiki
 * "Fibonacci Heap" Wiki
 * "Min-Max Heap" Wiki
-* :soon: [AVL Tree](https://en.wikipedia.org/wiki/AVL_tree)
+* "AVL Tree" Wiki
+* :soon: [Red-Black Tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree)
