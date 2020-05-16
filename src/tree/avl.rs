@@ -15,7 +15,7 @@ impl<K: std::cmp::Ord, V> Node<K, V> {
             key: Some(key),
             value: Some(value),
             height: height,
-            size: 0,
+            size: size,
             left_child: None,
             right_child: None,
         }
@@ -38,7 +38,7 @@ impl<K: std::cmp::Ord, V> Node<K, V> {
     }
 
     fn update_height(&mut self) {
-        self.height = 1 + Node::max_height(&self.left_child, &self.right_child);
+        self.height = (1 + Node::_max_height(&self.left_child, &self.right_child)) as usize;
     }
 
     fn update_size(&mut self) {
@@ -47,10 +47,6 @@ impl<K: std::cmp::Ord, V> Node<K, V> {
 
     fn _max_height(node1: &Option<Box<Node<K, V>>>, node2: &Option<Box<Node<K, V>>>) -> i64 {
         std::cmp::max(Node::height(node1), Node::height(node2))
-    }
-
-    fn max_height(node1: &Option<Box<Node<K, V>>>, node2: &Option<Box<Node<K, V>>>) -> usize {
-        Node::_max_height(node1, node2) as usize
     }
 
     fn height(node: &Option<Box<Node<K, V>>>) -> i64 {
@@ -72,17 +68,14 @@ impl<K: std::cmp::Ord, V> Node<K, V> {
     }
 }
 
+
 pub struct AVL<K: std::cmp::Ord, V> {
     root: Option<Box<Node<K, V>>>,
-    size: usize,
 }
 
 impl<K: std::cmp::Ord, V> AVL<K, V> {
     pub fn init() -> AVL<K, V> {
-        AVL {
-            root: None,
-            size: 0,
-        }
+        AVL { root: None }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -101,7 +94,7 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
         AVL::_get(&self.root, key)
     }
 
-    fn _get<'a>(node: &'a Option<Box<Node<K,V>>>, key: &K) -> Option<&'a V> {
+    fn _get<'a>(node: &'a Option<Box<Node<K, V>>>, key: &K) -> Option<&'a V> {
         if node.is_none() {
             return None;
         }
@@ -110,12 +103,10 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
 
         if *key < *node_ref.key() {
             AVL::_get(&node_ref.left_child, key)
-        }
-        else if *key > *node_ref.key() {
+        } else if *key > *node_ref.key() {
             AVL::_get(&node_ref.right_child, key)
-        }
-        else {
-            return Some(node_ref.value())
+        } else {
+            return Some(node_ref.value());
         }
     }
 
@@ -187,19 +178,19 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
         y
     }
 
-    pub fn delete(&mut self, key: K) {
+    pub fn delete(&mut self, key: &K) {
         if !self.is_empty() {
             self.root = AVL::_delete(self.root.take(), key);
         }
     }
 
-    fn _delete(node: Option<Box<Node<K, V>>>, key: K) -> Option<Box<Node<K, V>>> {
+    fn _delete(node: Option<Box<Node<K, V>>>, key: &K) -> Option<Box<Node<K, V>>> {
         match node {
             None => node,
             Some(mut _node) => {
-                if key < *_node.key() {
+                if *key < *_node.key() {
                     _node.left_child = AVL::_delete(_node.left_child.take(), key);
-                } else if key > *_node.key() {
+                } else if *key > *_node.key() {
                     _node.right_child = AVL::_delete(_node.right_child.take(), key);
                 } else {
                     if _node.left_child.is_none() {
@@ -264,7 +255,7 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
             return node.left_child.take();
         }
 
-        node.right_child = AVL::_delete_min(node.right_child.unwrap());
+        node.right_child = AVL::_delete_max(node.right_child.unwrap());
 
         node.update_height();
         node.update_size();
@@ -272,18 +263,18 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
         Some(AVL::balance(node))
     }
 
-    pub fn floor(&self, key: K) -> Option<&K> {
+    pub fn floor(&self, key: &K) -> Option<&K> {
         AVL::_floor(&self.root, key)
     }
 
-    fn _floor(node: &Option<Box<Node<K, V>>>, key: K) -> Option<&K> {
+    fn _floor<'a>(node: &'a Option<Box<Node<K, V>>>, key: &K) -> Option<&'a K> {
         if node.is_none() {
             return None;
         }
         let node_ref = node.as_ref().unwrap();
-        if key == *node_ref.key() {
+        if *key == *node_ref.key() {
             return Some(node_ref.key());
-        } else if key < *node_ref.key() {
+        } else if *key < *node_ref.key() {
             return AVL::_floor(&node_ref.left_child, key);
         }
         let found_key = AVL::_floor(&node_ref.right_child, key);
@@ -294,21 +285,21 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
         }
     }
 
-    pub fn ceiling(&self, key: K) -> Option<&K> {
+    pub fn ceiling(&self, key: &K) -> Option<&K> {
         AVL::_ceiling(&self.root, key)
     }
 
-    fn _ceiling(node: &Option<Box<Node<K, V>>>, key: K) -> Option<&K> {
+    fn _ceiling<'a>(node: &'a Option<Box<Node<K, V>>>, key: &K) -> Option<&'a K> {
         if node.is_none() {
             return None;
         }
         let node_ref = node.as_ref().unwrap();
-        if key == *node_ref.key() {
+        if *key == *node_ref.key() {
             return Some(node_ref.key());
-        } else if key > *node_ref.key() {
-            return AVL::_floor(&node_ref.right_child, key);
+        } else if *key > *node_ref.key() {
+            return AVL::_ceiling(&node_ref.right_child, key);
         }
-        let found_key = AVL::_floor(&node_ref.left_child, key);
+        let found_key = AVL::_ceiling(&node_ref.left_child, key);
         if !found_key.is_none() {
             return found_key;
         } else {
@@ -388,8 +379,7 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
             return;
         }
 
-        let mut queue: VecDeque<&Option<Box<Node<K, V>>>> =
-            VecDeque::with_capacity(Node::size(node));
+        let mut queue = VecDeque::<&Option<Box<Node<K, V>>>>::with_capacity(Node::size(node));
         queue.push_back(node);
 
         while !queue.is_empty() {
@@ -413,7 +403,12 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
         keys
     }
 
-    fn _keys_between<'a>(node: &'a Option<Box<Node<K, V>>>, low_key: &K, high_key: &K, keys: &mut Vec<&'a K>) {
+    fn _keys_between<'a>(
+        node: &'a Option<Box<Node<K, V>>>,
+        low_key: &K,
+        high_key: &K,
+        keys: &mut Vec<&'a K>,
+    ) {
         if node.is_none() {
             return;
         }
@@ -434,16 +429,503 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
         if self.is_empty() {
             return 0;
         }
-        
         if *low_key > *high_key {
             return 0;
         }
 
-        if self.contains(high_key) {
-            return self.rank(high_key) - self.rank(low_key) + 1;
+        return self.rank(high_key) - self.rank(low_key);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn is_avl<K: std::cmp::Ord, V>(node: &Option<Box<Node<K, V>>>) -> bool {
+        if node.is_none() {
+            return true;
         }
-        else {
-            return self.rank(high_key) - self.rank(low_key);
+
+        let node_ref = node.as_ref().unwrap();
+        let balance_factor = Node::balance_factor(node_ref);
+
+        if balance_factor < -1 || balance_factor > 1 {
+            return false;
         }
+
+        return is_avl(&node_ref.left_child) && is_avl(&node_ref.right_child);
+    }
+
+    fn is_bst<K: std::cmp::Ord, V>(
+        node: &Option<Box<Node<K, V>>>,
+        min: Option<&K>,
+        max: Option<&K>,
+    ) -> bool {
+        if node.is_none() {
+            return true;
+        }
+
+        let node_ref = node.as_ref().unwrap();
+        if !min.is_none() && *node_ref.key() <= **min.as_ref().unwrap() {
+            return false;
+        }
+        if !max.is_none() && *node_ref.key() >= **max.as_ref().unwrap() {
+            return false;
+        }
+
+        return is_bst(&node_ref.left_child, min, Some(node_ref.key()))
+            && is_bst(&node_ref.right_child, Some(node_ref.key()), max);
+    }
+
+    fn is_size_consistent<K: std::cmp::Ord, V>(node: &Option<Box<Node<K, V>>>) -> bool {
+        if node.is_none() {
+            return true;
+        }
+        let node_ref = node.as_ref().unwrap();
+
+        if Node::size(node)
+            != Node::size(&node_ref.left_child) + Node::size(&node_ref.right_child) + 1
+        {
+            return false;
+        }
+
+        return is_size_consistent(&node_ref.left_child)
+            && is_size_consistent(&node_ref.right_child);
+    }
+
+    fn is_rank_consistent<K: std::cmp::Ord, V>(avl_tree: &AVL<K, V>) -> bool {
+        for i in 0..Node::size(&avl_tree.root) {
+            if i != avl_tree.rank(avl_tree.select(i).unwrap().0) {
+                return false;
+            }
+        }
+
+        for key in avl_tree.keys() {
+            if *avl_tree.select(avl_tree.rank(key)).unwrap().0 != *key {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    #[test]
+    fn tree_avl_node_max_height() {
+        assert_eq!(Node::<usize, usize>::_max_height(&None, &None), -1);
+        assert_eq!(
+            Node::<usize, usize>::_max_height(&Some(Box::new(Node::init(1, 1, 0, 0))), &None),
+            0
+        );
+        assert_eq!(
+            Node::<usize, usize>::_max_height(
+                &Some(Box::new(Node::init(1, 1, 1, 0))),
+                &Some(Box::new(Node::init(1, 1, 2, 0)))
+            ),
+            2
+        );
+    }
+
+    #[test]
+    fn tree_avl_node_update_height() {
+        let mut root = Node::init(1, 1, 10, 0);
+        let mut left = Node::init(1, 1, 20, 0);
+        let mut right = Node::init(1, 1, 30, 0);
+
+        left.update_height();
+        right.update_height();
+
+        root.left_child = Some(Box::new(left));
+        root.right_child = Some(Box::new(right));
+
+        root.update_height();
+
+        assert_eq!(root.height, 1);
+        assert_eq!(root.left_child.unwrap().height, 0);
+        assert_eq!(root.right_child.unwrap().height, 0);
+    }
+
+    #[test]
+    fn tree_avl_init() {
+        let avl_tree = AVL::<usize, usize>::init();
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_insert_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        avl_tree.insert(1, 1);
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_insert_2() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        avl_tree.insert(4, 1);
+        avl_tree.insert(3, 1);
+        avl_tree.insert(2, 1);
+        avl_tree.insert(1, 1);
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_insert_3() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        for i in (0..100).rev() {
+            avl_tree.insert(i, i);
+        }
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_delete_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        avl_tree.delete(&1);
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_delete_2() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        avl_tree.insert(4, 1);
+        avl_tree.insert(3, 1);
+        avl_tree.insert(2, 1);
+        avl_tree.insert(1, 1);
+
+        avl_tree.delete(&1);
+        assert_eq!(avl_tree.get(&1), None);
+
+        avl_tree.delete(&3);
+        assert_eq!(avl_tree.get(&3), None);
+
+        avl_tree.delete(&2);
+        assert_eq!(avl_tree.get(&2), None);
+
+        avl_tree.delete(&4);
+        assert_eq!(avl_tree.get(&4), None);
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_is_empty() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        assert!(avl_tree.is_empty());
+
+        avl_tree.insert(1, 1);
+
+        assert!(!avl_tree.is_empty());
+    }
+
+    #[test]
+    fn tree_avl_size_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+        assert_eq!(avl_tree.size(), 0);
+
+        avl_tree.insert(1, 1);
+        assert_eq!(avl_tree.size(), 1);
+
+        avl_tree.insert(2, 1);
+        assert_eq!(avl_tree.size(), 2);
+
+        avl_tree.insert(3, 1);
+        assert_eq!(avl_tree.size(), 3);
+
+        avl_tree.insert(4, 1);
+        assert_eq!(avl_tree.size(), 4);
+    }
+
+    #[test]
+    fn tree_avl_contains_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+        assert!(!avl_tree.contains(&1));
+
+        avl_tree.insert(1, 2);
+        assert!(avl_tree.contains(&1));
+
+        avl_tree.insert(1, 3);
+        assert!(avl_tree.contains(&1));
+    }
+
+    #[test]
+    fn tree_avl_get_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+        assert_eq!(avl_tree.get(&1), None);
+
+        avl_tree.insert(1, 2);
+        assert_eq!(*avl_tree.get(&1).unwrap(), 2);
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_get_2() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        for i in (0..100).rev() {
+            avl_tree.insert(i, i);
+        }
+
+        for i in (0..100).rev() {
+            assert_eq!(*avl_tree.get(&i).unwrap(), i);
+        }
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_get_3() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        for i in (0..100).rev() {
+            avl_tree.insert(i, i);
+        }
+
+        for i in (0..100).rev() {
+            assert_eq!(*avl_tree.get(&i).unwrap(), i);
+        }
+
+        for i in (0..100).rev() {
+            avl_tree.insert(i, i + 1);
+        }
+
+        for i in (0..100).rev() {
+            assert_eq!(*avl_tree.get(&i).unwrap(), i + 1);
+        }
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_delete_min_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        avl_tree.delete_min();
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_delete_min_2() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        for i in (0..100).rev() {
+            avl_tree.insert(i, i);
+        }
+
+        for i in 0..100 {
+            avl_tree.delete_min();
+            assert_eq!(avl_tree.get(&i), None);
+        }
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_delete_max_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        avl_tree.delete_max();
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_delete_max_2() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        for i in (0..100).rev() {
+            avl_tree.insert(i, i);
+        }
+
+        for i in (0..100).rev() {
+            avl_tree.delete_max();
+            assert_eq!(avl_tree.get(&i), None);
+        }
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_floor_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        for i in (0..100).step_by(2) {
+            avl_tree.insert(i, i);
+        }
+
+        for i in (1..100).step_by(2) {
+            assert_eq!(*avl_tree.floor(&i).unwrap(), i - 1);
+        }
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_ceiling_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        for i in (0..100).step_by(2) {
+            avl_tree.insert(i, i);
+        }
+
+        for i in (1..99).step_by(2) {
+            assert_eq!(*avl_tree.ceiling(&i).unwrap(), i + 1);
+        }
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_select_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        for i in (0..100).rev() {
+            avl_tree.insert(i, i);
+        }
+
+        for i in 1..100 {
+            let result = avl_tree.select(i).unwrap();
+            assert_eq!((*result.0, *result.1), (i, i));
+        }
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_rank_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        for i in (1..100).rev() {
+            avl_tree.insert(i, i);
+        }
+
+        for i in 1..100 {
+            assert_eq!(avl_tree.rank(&i), i - 1);
+        }
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_keys_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        for i in (1..100).rev() {
+            avl_tree.insert(i, i);
+        }
+
+        let mut i = 1;
+        for key in avl_tree.keys() {
+            assert!(*key == i);
+            i += 1;
+        }
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_keys_between_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        for i in (1..100).rev() {
+            avl_tree.insert(i, i);
+        }
+
+        for i in 1..100 {
+            let mut j = i;
+
+            for key in avl_tree.keys_between(&i, &99) {
+                assert_eq!(*key, j);
+                j += 1;
+            }
+        }
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
+    }
+
+    #[test]
+    fn tree_avl_size_between_1() {
+        let mut avl_tree = AVL::<usize, usize>::init();
+
+        for i in (1..100).rev() {
+            avl_tree.insert(i, i);
+        }
+
+        for i in 1..100 {
+            assert_eq!(avl_tree.size_between(&i, &100), 100 - i);
+        }
+
+        assert!(is_avl(&avl_tree.root));
+        assert!(is_bst(&avl_tree.root, None, None));
+        assert!(is_size_consistent(&avl_tree.root));
+        assert!(is_rank_consistent(&avl_tree));
     }
 }
