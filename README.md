@@ -8,12 +8,16 @@ It is still an ongoing project.
 **Documentation**: https://docs.rs/rudac
 
 Data structures:
-* [Circular Queue / Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer)
-* Binomial Tree
-* [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
-* [Fibonacci Heap](https://en.wikipedia.org/wiki/Fibonacci_heap)
-* [Min-Max Heap](https://en.wikipedia.org/wiki/Min-max_heap)
-* [AVL Tree](https://en.wikipedia.org/wiki/AVL_tree)
+* Queue:
+    - [Circular Queue / Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer)
+* Heap:
+    - [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
+    - [Fibonacci Heap](https://en.wikipedia.org/wiki/Fibonacci_heap)
+    - [Min-Max Heap](https://en.wikipedia.org/wiki/Min-max_heap)
+* Tree:
+    - Binomial Tree
+    - [AVL Tree](https://en.wikipedia.org/wiki/AVL_tree)
+    - [Red-Black Tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree)
 
 Todo:
 * "Circular Queue" Wiki
@@ -21,4 +25,5 @@ Todo:
 * "Fibonacci Heap" Wiki
 * "Min-Max Heap" Wiki
 * "AVL Tree" Wiki
-* :soon: [Red-Black Tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree)
+* "Red-Black Tree" Wiki
+* :soon: [Interval Tree](https://en.wikipedia.org/wiki/Interval_tree)

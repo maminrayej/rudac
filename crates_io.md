@@ -6,9 +6,14 @@ It aims to be a comprehensive crate of usefull data structure and algorithms.
 It is still an ongoing project.
 
 Data structures:
-* [Circular Queue / Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer)
-* Binomial Tree
-* [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
-* [Fibonacci Heap](https://en.wikipedia.org/wiki/Fibonacci_heap)
-* [Min-Max Heap](https://en.wikipedia.org/wiki/Min-max_heap)
-* [AVL Tree](https://en.wikipedia.org/wiki/AVL_tree)
+Data structures:
+* Queue:
+    - [Circular Queue / Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer)
+* Heap:
+    - [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
+    - [Fibonacci Heap](https://en.wikipedia.org/wiki/Fibonacci_heap)
+    - [Min-Max Heap](https://en.wikipedia.org/wiki/Min-max_heap)
+* Tree:
+    - Binomial Tree
+    - [AVL Tree](https://en.wikipedia.org/wiki/AVL_tree)
+    - [Red-Black Tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree)
