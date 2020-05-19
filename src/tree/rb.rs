@@ -81,7 +81,7 @@ impl<K: std::cmp::Ord, V> Node<K, V> {
 /// ```
 /// use rudac::tree::RedBlack;
 /// 
-/// // initialize an Red Black tree with keys of type usize and values of type String
+/// // initialize a Red Black tree with keys of type usize and values of type String
 /// let mut rb_tree = RedBlack::<usize, String>::init();
 /// 
 /// // insert items into tree
@@ -653,6 +653,60 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
         } else {
             return Some((node_ref.key(), node_ref.value()));
         }
+    }
+
+    /// Returns the smallest key and its associated value in the tree
+    /// 
+    /// # Examples
+    /// ```
+    /// use rudac::tree::RedBlack;
+    /// 
+    /// let mut rb_tree = RedBlack::<usize,usize>::init();
+    /// 
+    /// rb_tree.insert(1,10);
+    /// rb_tree.insert(3,20);
+    /// rb_tree.insert(5,30);
+    /// rb_tree.insert(7,40);
+    /// 
+    /// let (key, value) = rb_tree.min().unwrap();
+    /// assert_eq!(*key, 1);
+    /// assert_eq!(*value, 10);
+    /// 
+    /// rb_tree.delete_min();
+    /// 
+    /// let (key, value) = rb_tree.min().unwrap();
+    /// assert_eq!(*key, 3);
+    /// assert_eq!(*value, 20);
+    /// ```
+    pub fn min(&self) -> Option<(&K, &V)> {
+        self.select(0)
+    }
+
+    /// Returns the largest key and its associated value in the tree
+    /// 
+    /// # Examples
+    /// ```
+    /// use rudac::tree::RedBlack;
+    /// 
+    /// let mut rb_tree = RedBlack::<usize,usize>::init();
+    /// 
+    /// rb_tree.insert(1,10);
+    /// rb_tree.insert(3,20);
+    /// rb_tree.insert(5,30);
+    /// rb_tree.insert(7,40);
+    /// 
+    /// let (key, value) = rb_tree.max().unwrap();
+    /// assert_eq!(*key, 7);
+    /// assert_eq!(*value, 40);
+    /// 
+    /// rb_tree.delete_max();
+    /// 
+    /// let (key, value) = rb_tree.max().unwrap();
+    /// assert_eq!(*key, 5);
+    /// assert_eq!(*value, 30);
+    /// ```
+    pub fn max(&self) -> Option<(&K, &V)> {
+        self.select(self.size()-1)
     }
 
     /// Returns the number of keys in the symbol table strictly less than `key`

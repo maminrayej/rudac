@@ -152,6 +152,12 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
         Node::size(&self.root)
     }
 
+    /// Returns the height of the tree.
+    /// An empty tree has height -1 and a tree with one node has height 0
+    pub fn height(&self) -> i64 {
+        Node::height(&self.root)
+    }
+
     /// Returns `true` if tree contains the specified `key`, false otherwise
     /// 
     /// # Arguments
@@ -339,7 +345,7 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
                         return _node.left_child;
                     } else {
                         let mut y = _node;
-                        _node = AVL::min(&mut y.right_child);
+                        _node = AVL::_min(&mut y.right_child);
                         _node.right_child = AVL::_delete_min(y.right_child.unwrap());
                         _node.left_child = y.left_child;
                     }
@@ -352,13 +358,13 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
         }
     }
     
-    fn min(node: &mut Option<Box<Node<K, V>>>) -> Box<Node<K, V>> {
+    fn _min(node: &mut Option<Box<Node<K, V>>>) -> Box<Node<K, V>> {
         match node {
             Some(_node) => {
                 if _node.left_child.is_none() {
                     Box::new(Node::init(_node.get_key(), _node.get_value(), 0, 1))
                 } else {
-                    AVL::min(&mut _node.left_child)
+                    AVL::_min(&mut _node.left_child)
                 }
             }
             None => panic!("Called min on None node"),
@@ -569,6 +575,60 @@ impl<K: std::cmp::Ord, V> AVL<K, V> {
         } else {
             return Some((node_ref.key(), node_ref.value()));
         }
+    }
+
+    /// Returns the smallest key and its associated value in the tree
+    /// 
+    /// # Examples
+    /// ```
+    /// use rudac::tree::AVL;
+    /// 
+    /// let mut avl_tree = AVL::<usize,usize>::init();
+    /// 
+    /// avl_tree.insert(1,10);
+    /// avl_tree.insert(3,20);
+    /// avl_tree.insert(5,30);
+    /// avl_tree.insert(7,40);
+    /// 
+    /// let (key, value) = avl_tree.min().unwrap();
+    /// assert_eq!(*key, 1);
+    /// assert_eq!(*value, 10);
+    /// 
+    /// avl_tree.delete_min();
+    /// 
+    /// let (key, value) = avl_tree.min().unwrap();
+    /// assert_eq!(*key, 3);
+    /// assert_eq!(*value, 20);
+    /// ```
+    pub fn min(&self) -> Option<(&K, &V)> {
+        self.select(0)
+    }
+
+    /// Returns the largest key and its associated value in the tree
+    /// 
+    /// # Examples
+    /// ```
+    /// use rudac::tree::AVL;
+    /// 
+    /// let mut avl_tree = AVL::<usize,usize>::init();
+    /// 
+    /// avl_tree.insert(1,10);
+    /// avl_tree.insert(3,20);
+    /// avl_tree.insert(5,30);
+    /// avl_tree.insert(7,40);
+    /// 
+    /// let (key, value) = avl_tree.max().unwrap();
+    /// assert_eq!(*key, 7);
+    /// assert_eq!(*value, 40);
+    /// 
+    /// avl_tree.delete_max();
+    /// 
+    /// let (key, value) = avl_tree.max().unwrap();
+    /// assert_eq!(*key, 5);
+    /// assert_eq!(*value, 30);
+    /// ```
+    pub fn max(&self) -> Option<(&K, &V)> {
+        self.select(self.size()-1)
     }
 
     /// Returns the number of keys in the symbol table strictly less than `key`
