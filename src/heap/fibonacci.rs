@@ -381,7 +381,8 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
         if self.priority_pointer.is_none() {
             self.priority_pointer = Some(new_node);
         } else {
-            if InternalTree::has_higher_priority( // if new node has higher priority, it must become priority node
+            if InternalTree::has_higher_priority(
+                // if new node has higher priority, it must become priority node
                 &new_node,
                 &self.priority_pointer.as_ref().unwrap(),
                 heap_is_min,
@@ -487,15 +488,15 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
     /// fibonacci_heap.push(3);
     /// fibonacci_heap.push(0);
     /// fibonacci_heap.push(1);
-    /// 
+    ///
     /// // before pop
     /// assert_eq!(
     ///     FibonacciHeap::preorder(&fibonacci_heap),
     ///     String::from("Priority: 0\nTree 1: 3\nTree 2: 2\nTree 3: 1\n")    
     /// );
-    /// 
+    ///
     /// assert_eq!(fibonacci_heap.pop(), Some(0));
-    /// 
+    ///
     /// // heap trees are consolidated
     /// assert_eq!(
     ///     FibonacciHeap::preorder(&fibonacci_heap),
@@ -528,7 +529,7 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
 
         // if there is nodes in heap, consolidate them
         if !self.is_empty() {
-            // a temp priority node just for consolidate method to work 
+            // a temp priority node just for consolidate method to work
             self.priority_pointer = self.children_list.pop_front();
 
             self.consolidate();
@@ -541,14 +542,13 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
     // this method consolidate trees in fibonacci heap
     // until each tree in children list of the heap has a unique degree
     // ex after consolidate there can not be two trees with degree 0 like: 0 <-> 1
-    // 
+    //
     // after consolidate total number of trees in heap is gonna be at most log(n)
     fn consolidate(&mut self) {
         // there is nothing to consolidate
         if self.is_empty() {
             return;
         }
-        
         // use a helper vector for consolidating
         // vector keeps track of degree of present trees
         // therefore we can make sure each degree is associated with a unique tree
@@ -573,7 +573,8 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
         while !next.is_none() {
             let mut x = next.unwrap(); // current internal tree
             let mut d = x.degree(); // degree of current internal tree
-            while !a[d].is_none() { // iterate over consolidate array to find the place for x
+            while !a[d].is_none() {
+                // iterate over consolidate array to find the place for x
                 let y = a[d].take().unwrap(); // if there exists a tree with degree of x like y
                 x = InternalTree::merge(x, y); // merge x and y and store merged tree in x
                 d += 1; // degree of x is now d + 1 because it has y as its child
@@ -662,7 +663,7 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
     /// use rudac::heap::FibonacciHeap;
     ///
     /// let mut fibonacci_heap: FibonacciHeap<usize> = FibonacciHeap::init_min();
-    /// 
+    ///
     /// fibonacci_heap.push(0);
     /// assert_eq!(fibonacci_heap.is_empty(), false);
     ///
@@ -791,7 +792,14 @@ mod fibonacci_heap_tests {
         fh.push(3);
 
         assert_eq!(fh.children_list.len(), 2);
-        assert_eq!(fh.priority_pointer.as_ref().unwrap().peek_payload().unwrap(), 0);
+        assert_eq!(
+            fh.priority_pointer
+                .as_ref()
+                .unwrap()
+                .peek_payload()
+                .unwrap(),
+            0
+        );
 
         assert_eq!(
             FibonacciHeap::preorder(&fh),
@@ -808,7 +816,14 @@ mod fibonacci_heap_tests {
         fh.push(0);
 
         assert_eq!(fh.children_list.len(), 2);
-        assert_eq!(fh.priority_pointer.as_ref().unwrap().peek_payload().unwrap(), 0);
+        assert_eq!(
+            fh.priority_pointer
+                .as_ref()
+                .unwrap()
+                .peek_payload()
+                .unwrap(),
+            0
+        );
 
         assert_eq!(
             FibonacciHeap::preorder(&fh),
@@ -945,7 +960,10 @@ mod fibonacci_heap_tests {
 
         fh.consolidate();
 
-        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Priority: 0 1\n"));
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Priority: 0 1\n")
+        );
     }
 
     #[test]
@@ -973,7 +991,10 @@ mod fibonacci_heap_tests {
 
         fh.consolidate();
 
-        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Priority: 0 1 2 3\n"));
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Priority: 0 1 2 3\n")
+        );
     }
 
     #[test]
@@ -1038,7 +1059,10 @@ mod fibonacci_heap_tests {
 
         assert_eq!(fh.pop(), Some(0));
         assert_eq!(fh.size(), 2);
-        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Priority: 1 2\n"));
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Priority: 1 2\n")
+        );
     }
 
     #[test]
@@ -1070,7 +1094,10 @@ mod fibonacci_heap_tests {
 
         assert_eq!(fh.pop(), Some(1));
         assert_eq!(fh.size(), 2);
-        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Priority: 2 3\n"));
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Priority: 2 3\n")
+        );
 
         assert_eq!(fh.pop(), Some(2));
         assert_eq!(fh.size(), 1);
@@ -1093,7 +1120,10 @@ mod fibonacci_heap_tests {
         }
         assert_eq!(fh.pop(), Some(0));
         assert_eq!(fh.size(), 4);
-        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Priority: 1 2 3 4\n"));
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Priority: 1 2 3 4\n")
+        );
 
         assert_eq!(fh.pop(), Some(1));
         assert_eq!(fh.size(), 3);
@@ -1104,7 +1134,10 @@ mod fibonacci_heap_tests {
 
         assert_eq!(fh.pop(), Some(2));
         assert_eq!(fh.size(), 2);
-        assert_eq!(FibonacciHeap::preorder(&fh), String::from("Priority: 3 4\n"));
+        assert_eq!(
+            FibonacciHeap::preorder(&fh),
+            String::from("Priority: 3 4\n")
+        );
 
         assert_eq!(fh.pop(), Some(3));
         assert_eq!(fh.size(), 1);

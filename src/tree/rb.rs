@@ -76,26 +76,26 @@ impl<K: std::cmp::Ord, V> Node<K, V> {
 
 /// A Red Black tree is a self-balancing binary search tree.
 /// Red Black Trees provide faster insertion and removal operations than AVL trees
-/// 
+///
 /// # Examples
 /// ```
 /// use rudac::tree::RedBlack;
-/// 
+///
 /// // initialize a Red Black tree with keys of type usize and values of type String
 /// let mut rb_tree = RedBlack::<usize, String>::init();
-/// 
+///
 /// // insert items into tree
 /// rb_tree.insert(1, String::from("rudac"));
 /// rb_tree.insert(2, String::from("is"));
 /// rb_tree.insert(3, String::from("awesome"));
 /// rb_tree.insert(4, String::from("!"));
-/// 
+///
 /// // lookup for items
 /// assert_eq!(*rb_tree.get(&1).unwrap(), String::from("rudac"));
 /// assert_eq!(*rb_tree.get(&2).unwrap(), String::from("is"));
 /// assert_eq!(*rb_tree.get(&3).unwrap(), String::from("awesome"));
 /// assert_eq!(*rb_tree.get(&4).unwrap(), String::from("!"));
-/// 
+///
 /// // delete items from tree
 /// rb_tree.delete(&4);
 /// assert_eq!(rb_tree.get(&4), None);
@@ -106,15 +106,15 @@ pub struct RedBlack<K: std::cmp::Ord, V> {
 
 impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     /// Initializes an empty Red Black tree
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let usize_to_string = RedBlack::<usize, String>::init();
-    /// 
+    ///
     /// let string_to_usize = RedBlack::<String, usize>::init();
-    /// 
+    ///
     /// let string_to_string = RedBlack::<String, String>::init();
     /// ```
     pub fn init() -> RedBlack<K, V> {
@@ -122,14 +122,14 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Returns total number of nodes in the tree
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
     /// assert_eq!(rb_tree.size(), 0);
-    /// 
+    ///
     /// rb_tree.insert(1,1);
     /// rb_tree.insert(2,4);
     /// rb_tree.insert(3,8);
@@ -140,17 +140,17 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Returns `true` if tree is empty and `false` otherwise
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
     /// assert_eq!(rb_tree.is_empty(), true);
-    /// 
+    ///
     /// rb_tree.insert(1,1);
     /// assert_eq!(rb_tree.is_empty(), false);
-    /// 
+    ///
     /// rb_tree.delete(&1);
     /// assert_eq!(rb_tree.is_empty(), true);
     /// ```
@@ -161,16 +161,16 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     /// Returns a reference to value associated with specified `key` in tree, `None` otherwise
     /// # Arguments
     /// * `key`: key to be searched in the tree
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
-    /// 
+    ///
     /// rb_tree.insert(1,10);
     /// assert_eq!(*rb_tree.get(&1).unwrap(), 10);
-    /// 
+    ///
     /// rb_tree.delete(&1);
     /// assert_eq!(rb_tree.get(&1), None);
     /// ```
@@ -193,19 +193,19 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Returns `true` if tree contains the specified `key`, false otherwise
-    /// 
+    ///
     /// # Arguments
     /// * `key`: key to be searched in the tree
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
-    /// 
+    ///
     /// rb_tree.insert(1,10);
     /// assert_eq!(rb_tree.contains(&1), true);
-    /// 
+    ///
     /// rb_tree.delete(&1);
     /// assert_eq!(rb_tree.contains(&1), false);
     /// ```
@@ -215,23 +215,23 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
 
     /// Insert a node which contains the specified `key` and `value` into the tree.
     /// if `key` already exists, this method will replace `value` as the new value of the node
-    /// 
+    ///
     /// # Arguments
     /// * `key`: key of the new node
     /// * `value`: value associated with the `key`
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
-    /// 
+    ///
     /// rb_tree.insert(1,10);
     /// rb_tree.insert(2,20);
     /// rb_tree.insert(3,30);
     /// rb_tree.insert(4,40);
     /// assert_eq!(*rb_tree.get(&1).unwrap(), 10);
-    /// 
+    ///
     /// rb_tree.insert(1,11);
     /// assert_eq!(*rb_tree.get(&1).unwrap(), 11);
     /// ```
@@ -275,22 +275,22 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Deletes node with smallest key from the tree
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
-    /// 
+    ///
     /// rb_tree.insert(1,10);
     /// rb_tree.insert(2,20);
     /// rb_tree.insert(3,30);
     /// rb_tree.insert(4,40);
-    /// 
+    ///
     /// rb_tree.delete_min();
     /// assert_eq!(rb_tree.get(&1), None);
-    /// 
-    /// 
+    ///
+    ///
     /// rb_tree.delete_min();
     /// assert_eq!(rb_tree.get(&2), None);
     /// ```
@@ -333,22 +333,22 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Deletes node with largest key from the tree
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
-    /// 
+    ///
     /// rb_tree.insert(1,10);
     /// rb_tree.insert(2,20);
     /// rb_tree.insert(3,30);
     /// rb_tree.insert(4,40);
-    /// 
+    ///
     /// rb_tree.delete_max();
     /// assert_eq!(rb_tree.get(&4), None);
-    /// 
-    /// 
+    ///
+    ///
     /// rb_tree.delete_max();
     /// assert_eq!(rb_tree.get(&3), None);
     /// ```
@@ -400,21 +400,21 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Deletes the node containing the specified `key`
-    /// 
+    ///
     /// # Arguments
     /// * `key`: key of the node to be deleted from the tree
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
-    /// 
+    ///
     /// rb_tree.insert(1,10);
     /// rb_tree.insert(2,20);
     /// rb_tree.insert(3,30);
     /// rb_tree.insert(4,40);
-    /// 
+    ///
     /// rb_tree.delete(&1);
     /// assert_eq!(rb_tree.get(&1), None);
     /// ```
@@ -516,21 +516,21 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Returns the largest key in the tree less than or equal to `key`
-    /// 
+    ///
     /// # Arguments
     /// * `key`: key to be searched for
-    /// 
+    ///
     /// # Examples:
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
-    /// 
+    ///
     /// rb_tree.insert(1,10);
     /// rb_tree.insert(3,20);
     /// rb_tree.insert(5,30);
     /// rb_tree.insert(7,40);
-    /// 
+    ///
     /// assert_eq!(*rb_tree.floor(&2).unwrap(), 1);
     /// assert_eq!(rb_tree.floor(&0), None);
     /// ```
@@ -562,21 +562,21 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Returns the smallest key in the tree greater than or equal to `key`
-    /// 
+    ///
     /// # Arguments
     /// * `key`: key to be searched for
-    /// 
+    ///
     /// # Examples:
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
-    /// 
+    ///
     /// rb_tree.insert(1,10);
     /// rb_tree.insert(3,20);
     /// rb_tree.insert(5,30);
     /// rb_tree.insert(7,40);
-    /// 
+    ///
     /// assert_eq!(*rb_tree.ceiling(&6).unwrap(), 7);
     /// assert_eq!(rb_tree.ceiling(&8), None);
     /// ```
@@ -608,24 +608,24 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Returns the kth smallest key and its associated value in the tree
-    /// 
+    ///
     /// # Arguments
     /// * `k`: the order statistic
-    /// 
+    ///
     /// # Panics
     /// * panics if k is not in range: 0 <= k <= size - 1
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
-    /// 
+    ///
     /// rb_tree.insert(1,10);
     /// rb_tree.insert(3,20);
     /// rb_tree.insert(5,30);
     /// rb_tree.insert(7,40);
-    /// 
+    ///
     /// let (key, value) = rb_tree.select(1).unwrap();
     /// assert_eq!(*key, 3);
     /// assert_eq!(*value, 20);
@@ -656,24 +656,24 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Returns the smallest key and its associated value in the tree
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
-    /// 
+    ///
     /// rb_tree.insert(1,10);
     /// rb_tree.insert(3,20);
     /// rb_tree.insert(5,30);
     /// rb_tree.insert(7,40);
-    /// 
+    ///
     /// let (key, value) = rb_tree.min().unwrap();
     /// assert_eq!(*key, 1);
     /// assert_eq!(*value, 10);
-    /// 
+    ///
     /// rb_tree.delete_min();
-    /// 
+    ///
     /// let (key, value) = rb_tree.min().unwrap();
     /// assert_eq!(*key, 3);
     /// assert_eq!(*value, 20);
@@ -683,47 +683,47 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Returns the largest key and its associated value in the tree
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize,usize>::init();
-    /// 
+    ///
     /// rb_tree.insert(1,10);
     /// rb_tree.insert(3,20);
     /// rb_tree.insert(5,30);
     /// rb_tree.insert(7,40);
-    /// 
+    ///
     /// let (key, value) = rb_tree.max().unwrap();
     /// assert_eq!(*key, 7);
     /// assert_eq!(*value, 40);
-    /// 
+    ///
     /// rb_tree.delete_max();
-    /// 
+    ///
     /// let (key, value) = rb_tree.max().unwrap();
     /// assert_eq!(*key, 5);
     /// assert_eq!(*value, 30);
     /// ```
     pub fn max(&self) -> Option<(&K, &V)> {
-        self.select(self.size()-1)
+        self.select(self.size() - 1)
     }
 
     /// Returns the number of keys in the symbol table strictly less than `key`
-    /// 
+    ///
     /// # Arguments
     /// * `key`: key to be searched for
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize, usize>::init();
-    /// 
+    ///
     /// for i in 1..100 {
     ///     rb_tree.insert(i, i);
     /// }
-    /// 
+    ///
     /// assert_eq!(rb_tree.rank(&99), 98);
     /// ```
     pub fn rank(&self, key: &K) -> usize {
@@ -748,25 +748,25 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
         }
     }
 
-    /// Returns all keys in the tree following an in-order traversal. 
+    /// Returns all keys in the tree following an in-order traversal.
     /// Therefore keys are sorted from smallest to largest
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize, usize>::init();
-    /// 
+    ///
     /// for i in (1..100).rev() {
     ///     rb_tree.insert(i, i);
     /// }
-    /// 
+    ///
     /// let mut i = 1;
     /// // keys are sorted: [1, 2, 3,..., 99]
     /// for key in rb_tree.keys() {
     ///     assert!(*key == i);
     ///     i += 1;
-    /// } 
+    /// }
     /// ```
     pub fn keys(&self) -> Vec<&K> {
         let mut keys: Vec<&K> = Vec::new();
@@ -818,24 +818,24 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Returns all keys in the symbol table between `low_key`(inclusive) and `high_key`(exclusive)
-    /// 
+    ///
     /// # Arguments
     /// * `low_key`: lowest key of the range
     /// * `high_key`: highest key of the range
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize, usize>::init();
-    /// 
+    ///
     /// for i in (1..100).rev() {
     ///     rb_tree.insert(i, i);
     /// }
-    /// 
+    ///
     /// let keys = rb_tree.keys_between(&1, &99);
-    /// 
-    /// assert_eq!(keys.len(), 98); 
+    ///
+    /// assert_eq!(keys.len(), 98);
     /// ```
     pub fn keys_between(&self, low_key: &K, high_key: &K) -> Vec<&K> {
         let mut keys: Vec<&K> = Vec::new();
@@ -868,24 +868,24 @@ impl<K: std::cmp::Ord, V> RedBlack<K, V> {
     }
 
     /// Returns the number of keys in the tree between `low_key`(inclusive) and `high_key`(exclusive)
-    /// 
+    ///
     /// # Arguments
     /// * `low_key`: lowest key of the range
     /// * `high_key`: highest key of the range
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::tree::RedBlack;
-    /// 
+    ///
     /// let mut rb_tree = RedBlack::<usize, usize>::init();
-    /// 
+    ///
     /// for i in (1..100).rev() {
     ///     rb_tree.insert(i, i);
     /// }
-    /// 
+    ///
     /// let keys = rb_tree.size_between(&1, &99);
-    /// 
-    /// assert_eq!(keys, 98); 
+    ///
+    /// assert_eq!(keys, 98);
     /// ```
     pub fn size_between(&self, low_key: &K, high_key: &K) -> usize {
         if self.is_empty() {

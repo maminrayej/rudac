@@ -1,7 +1,7 @@
-mod binomial;
 mod avl;
+mod binomial;
 mod rb;
 
-pub use binomial::BinomialTree;
 pub use avl::AVL;
+pub use binomial::BinomialTree;
 pub use rb::RedBlack;

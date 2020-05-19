@@ -629,7 +629,7 @@ impl<T: std::cmp::Ord> MinMax<T> {
         self.tree.reserve_exact(additional);
     }
 
-    /// Shrinks capacity internal vector to fit the existing data 
+    /// Shrinks capacity internal vector to fit the existing data
     pub fn shrink_to_fit(&mut self) {
         self.tree.shrink_to_fit();
     }

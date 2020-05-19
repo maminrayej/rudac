@@ -247,21 +247,21 @@ impl<T: std::cmp::Ord> BinomialHeap<T> {
     }
 
     /// Returns a reference to item with highest priority
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rudac::heap::BinomialHeap;
-    /// 
+    ///
     /// let bh1 = BinomialHeap::init_min(0);
     /// let bh2 = BinomialHeap::init_min(1);
     /// let mut merged_heap = BinomialHeap::merge(bh1, bh2);
-    /// 
+    ///
     /// assert_eq!(*merged_heap.peek(), Some(0));
     /// merged_heap.pop();
-    /// 
+    ///
     /// assert_eq!(*merged_heap.peek(), Some(1));
     /// merged_heap.pop();
-    /// 
+    ///
     /// assert_eq!(*merged_heap.peek(), None);
     /// ```
     pub fn peek(&self) -> &Option<T> {
