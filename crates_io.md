@@ -6,7 +6,6 @@ It aims to be a comprehensive crate of usefull data structure and algorithms.
 It is still an ongoing project.
 
 Data structures:
-Data structures:
 * Queue:
     - [Circular Queue / Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer)
 * Heap:
