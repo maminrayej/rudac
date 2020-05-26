@@ -128,7 +128,7 @@ impl<T: Ord> Node<T> {
 /// An interval tree is a tree data structure to hold intervals.
 /// Specifically, it allows one to efficiently find all intervals that overlap with any given interval or point.
 ///
-/// This data structure is backed by a rudac::tree:AVL
+/// This data structure is backed by a rudac::tree:IntervalTree
 ///
 /// # Examples
 /// ```
@@ -776,6 +776,28 @@ impl<T: Ord> IntervalTree<T> {
                 intervals,
             );
         }
+    }
+
+
+    /// Returns all intervals in the tree following an in-order traversal.
+    /// Therefore intervals are sorted from smallest to largest 
+    pub fn intervals(&self) -> Vec<Interval<T>> {
+        let mut intervals: Vec<Interval<T>> = Vec::new();
+
+        IntervalTree::_intervals_in_order(&self.root, &mut intervals);
+
+        intervals
+    }
+
+    fn _intervals_in_order(node: &Option<Box<Node<T>>>, intervals: &mut Vec<Interval<T>>) {
+        if node.is_none() {
+            return;
+        }
+
+        let node_ref = node.as_ref().unwrap();
+        IntervalTree::_intervals_in_order(&node_ref.left_child, intervals);
+        intervals.push(node_ref.interval().duplicate());
+        IntervalTree::_intervals_in_order(&node_ref.right_child, intervals);
     }
 
     /// Returns the number of intervals in the tree less than `interval`
