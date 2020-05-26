@@ -21,6 +21,13 @@ impl<T: Ord> Interval<T> {
         interval
     }
 
+    pub fn duplicate(&self) -> Interval<T> {
+        Interval {
+            low: self.get_low(),
+            high: self.get_high()
+        }
+    }
+
     pub fn valid(interval: &Interval<T>) -> bool {
         match (&interval.low(), &interval.high()) {
             (Included(low), Included(high)) => low <= high,
@@ -36,8 +43,16 @@ impl<T: Ord> Interval<T> {
         self.low.as_ref()
     }
 
+    pub fn get_low(&self) -> Rc<Bound<T>> {
+        Rc::clone(&self.low)
+    }
+
     pub fn high(&self) -> &Bound<T> {
         self.high.as_ref()
+    }
+
+    pub fn get_high(&self) -> Rc<Bound<T>> {
+        Rc::clone(&self.high)
     }
 
     pub fn overlaps(first: &Interval<T>, second: &Interval<T>) -> bool {
