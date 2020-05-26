@@ -125,30 +125,145 @@ impl<T: Ord> Node<T> {
     }
 }
 
+/// An interval tree is a tree data structure to hold intervals.
+/// Specifically, it allows one to efficiently find all intervals that overlap with any given interval or point.
+///
+/// This data structure is backed by a rudac::tree:AVL
+///
+/// # Examples
+/// ```
+/// use rudac::tree::IntervalTree;
+/// use rudac::util::Interval;
+/// use std::ops::Bound::*;
+///
+/// // initialize an interval tree with end points of type usize
+/// let mut interval_tree = IntervalTree::<usize>::init();
+///
+/// // insert interval into the tree
+/// interval_tree.insert(Interval::new(Included(0), Excluded(3)));
+/// interval_tree.insert(Interval::new(Included(6), Included(10)));
+/// interval_tree.insert(Interval::new(Excluded(8), Included(9)));
+/// interval_tree.insert(Interval::new(Excluded(15), Excluded(23)));
+/// interval_tree.insert(Interval::new(Included(16), Excluded(21)));
+/// interval_tree.insert(Interval::new(Included(17), Excluded(19)));
+/// interval_tree.insert(Interval::new(Excluded(19), Included(20)));
+/// interval_tree.insert(Interval::new(Excluded(25), Included(30)));
+/// interval_tree.insert(Interval::new(Included(26), Included(26)));
+///
+/// let interval1 = Interval::new(Excluded(23), Included(26));
+///
+/// // interval (25, 30] is overlapped with interval (23,26]
+/// assert!(interval_tree.find_overlap(&interval1).unwrap() == Interval::new(Excluded(25), Included(30)));
+///
+/// // there is no interval in the tree that has interval with (10,15)
+/// assert!(interval_tree.find_overlap(&Interval::new(Excluded(10), Excluded(15))).is_none());
+///
+/// // find all overlaps with an interval
+/// let interval = Interval::new(Included(8), Included(26));
+/// // intervals are: (8,9], [6,10],(19,20], [16,21), (15,23), [17,19), (25,30], [26,26]
+/// let intervals = interval_tree.find_overlaps(&interval);
+///
+/// // delete interval
+/// let interval = Interval::new(Included(15), Included(18));
+/// let overlapped_interval = interval_tree.find_overlap(&interval).unwrap();
+/// interval_tree.delete(&overlapped_interval);
+///
+/// // find all intervals between two intervals/points
+/// let low = Interval::point(14);
+/// let high = Interval::point(24);
+/// // intervals are: (15,23), [16,21), [17,19), (19,20]
+/// let intervals = interval_tree.intervals_between(&low, &high);
+/// ```
 pub struct IntervalTree<T: Ord> {
     root: Option<Box<Node<T>>>,
 }
 
 impl<T: Ord> IntervalTree<T> {
+    /// Initialize an interval tree with end points of type usize
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::IntervalTree;
+    ///
+    /// let mut interval_tree = IntervalTree::<usize>::init();
+    /// ```
     pub fn init() -> IntervalTree<T> {
         IntervalTree { root: None }
     }
 
+    /// Returns true if there are no intervals in the tree, false otherwise
     pub fn is_empty(&self) -> bool {
         self.root.is_none()
     }
 
+    /// Returns total number of intervals in the tree
     pub fn size(&self) -> usize {
         Node::size(&self.root)
     }
+
+    /// Returns height of the tree
     pub fn height(&self) -> i64 {
         Node::height(&self.root)
     }
 
+    /// Returns true if there exists an interval in the tree that overlaps with specified `interval`
+    ///
+    /// # Arguments
+    /// * `interval`: interval to be searched for any overlaps
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::IntervalTree;
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// let mut interval_tree = IntervalTree::<usize>::init();
+    ///
+    /// interval_tree.insert(Interval::new(Included(0), Excluded(3)));
+    /// interval_tree.insert(Interval::new(Included(6), Included(10)));
+    /// interval_tree.insert(Interval::new(Excluded(8), Included(9)));
+    /// interval_tree.insert(Interval::new(Excluded(15), Excluded(23)));
+    ///
+    /// assert!(!interval_tree.overlaps(&Interval::new(Included(4), Excluded(6))));
+    /// assert!(interval_tree.overlaps(&Interval::new(Included(4), Included(6))));
+    /// ```
     pub fn overlaps(&self, interval: &Interval<T>) -> bool {
         self.find_overlap(interval).is_some()
     }
 
+    /// Returns first interval that overlaps with specified `interval`
+    ///
+    /// # Arguments:
+    /// * `interval`: interval to be searched for any overlaps
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::IntervalTree;
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// // initialize an interval tree with end points of type usize
+    /// let mut interval_tree = IntervalTree::<usize>::init();
+    ///
+    /// // insert interval into the tree
+    /// interval_tree.insert(Interval::new(Included(0), Excluded(3)));
+    /// interval_tree.insert(Interval::new(Included(6), Included(10)));
+    /// interval_tree.insert(Interval::new(Excluded(8), Included(9)));
+    /// interval_tree.insert(Interval::new(Excluded(15), Excluded(23)));
+    /// interval_tree.insert(Interval::new(Included(16), Excluded(21)));
+    /// interval_tree.insert(Interval::new(Included(17), Excluded(19)));
+    /// interval_tree.insert(Interval::new(Excluded(19), Included(20)));
+    /// interval_tree.insert(Interval::new(Excluded(25), Included(30)));
+    /// interval_tree.insert(Interval::new(Included(26), Included(26)));
+    ///
+    /// let interval1 = Interval::new(Excluded(23), Included(26));
+    ///
+    /// // interval (25, 30] is overlapped with interval (23,26]
+    /// assert!(interval_tree.find_overlap(&interval1).unwrap() == Interval::new(Excluded(25), Included(30)));
+    ///
+    /// // there is no interval in the tree that has interval with (10,15)
+    /// assert!(interval_tree.find_overlap(&Interval::new(Excluded(10), Excluded(15))).is_none());
+    /// ```
     pub fn find_overlap(&self, interval: &Interval<T>) -> Option<Interval<T>> {
         IntervalTree::_find_overlap(&self.root, interval)
     }
@@ -183,6 +298,36 @@ impl<T: Ord> IntervalTree<T> {
         }
     }
 
+    /// Returns all intervals that overlap with the specified `interval`
+    ///
+    /// # Arguments
+    /// * `interval`: interval to be searched for any overlaps
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::IntervalTree;
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// // initialize an interval tree with end points of type usize
+    /// let mut interval_tree = IntervalTree::<usize>::init();
+    ///
+    /// // insert interval into the tree
+    /// interval_tree.insert(Interval::new(Included(0), Excluded(3)));
+    /// interval_tree.insert(Interval::new(Included(6), Included(10)));
+    /// interval_tree.insert(Interval::new(Excluded(8), Included(9)));
+    /// interval_tree.insert(Interval::new(Excluded(15), Excluded(23)));
+    /// interval_tree.insert(Interval::new(Included(16), Excluded(21)));
+    /// interval_tree.insert(Interval::new(Included(17), Excluded(19)));
+    /// interval_tree.insert(Interval::new(Excluded(19), Included(20)));
+    /// interval_tree.insert(Interval::new(Excluded(25), Included(30)));
+    /// interval_tree.insert(Interval::new(Included(26), Included(26)));
+    ///
+    /// // find all overlaps with an interval
+    /// let interval = Interval::new(Included(8), Included(26));
+    /// // intervals are: (8,9], [6,10],(19,20], [16,21), (15,23), [17,19), (25,30], [26,26]
+    /// let intervals = interval_tree.find_overlaps(&interval);
+    /// ```
     pub fn find_overlaps(&self, interval: &Interval<T>) -> Vec<Interval<T>> {
         let mut overlaps = Vec::<Interval<T>>::new();
 
@@ -215,6 +360,31 @@ impl<T: Ord> IntervalTree<T> {
         IntervalTree::_find_overlaps(&node_ref.right_child, interval, overlaps);
     }
 
+    /// Inserts an interval in the tree. if interval already exists, `interval` will be ignored
+    ///
+    /// # Arguments
+    /// * `interval`: interval to be inserted in the tree
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::IntervalTree;
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// // initialize an interval tree with end points of type usize
+    /// let mut interval_tree = IntervalTree::<usize>::init();
+    ///
+    /// // insert interval into the tree
+    /// interval_tree.insert(Interval::new(Included(0), Excluded(3)));
+    /// interval_tree.insert(Interval::new(Included(6), Included(10)));
+    /// interval_tree.insert(Interval::new(Excluded(8), Included(9)));
+    /// interval_tree.insert(Interval::new(Excluded(15), Excluded(23)));
+    /// interval_tree.insert(Interval::new(Included(16), Excluded(21)));
+    /// interval_tree.insert(Interval::new(Included(17), Excluded(19)));
+    /// interval_tree.insert(Interval::new(Excluded(19), Included(20)));
+    /// interval_tree.insert(Interval::new(Excluded(25), Included(30)));
+    /// interval_tree.insert(Interval::new(Included(26), Included(26)));
+    /// ```
     pub fn insert(&mut self, interval: Interval<T>) {
         let max = interval.get_high();
 
@@ -293,6 +463,36 @@ impl<T: Ord> IntervalTree<T> {
         y
     }
 
+    /// Delete the specified `interval` if found
+    ///
+    /// # Arguments
+    /// * `interval`: interval to be deleted
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::IntervalTree;
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// // initialize an interval tree with end points of type usize
+    /// let mut interval_tree = IntervalTree::<usize>::init();
+    ///
+    /// // insert interval into the tree
+    /// interval_tree.insert(Interval::new(Included(0), Excluded(3)));
+    /// interval_tree.insert(Interval::new(Included(6), Included(10)));
+    /// interval_tree.insert(Interval::new(Excluded(8), Included(9)));
+    /// interval_tree.insert(Interval::new(Excluded(15), Excluded(23)));
+    /// interval_tree.insert(Interval::new(Included(16), Excluded(21)));
+    /// interval_tree.insert(Interval::new(Included(17), Excluded(19)));
+    /// interval_tree.insert(Interval::new(Excluded(19), Included(20)));
+    /// interval_tree.insert(Interval::new(Excluded(25), Included(30)));
+    /// interval_tree.insert(Interval::new(Included(26), Included(26)));
+    ///
+    /// // delete interval
+    /// let interval = Interval::new(Included(15), Included(18));
+    /// let overlapped_interval = interval_tree.find_overlap(&interval).unwrap();
+    /// interval_tree.delete(&overlapped_interval);
+    /// ```
     pub fn delete(&mut self, interval: &Interval<T>) {
         if !self.is_empty() {
             self.root = IntervalTree::_delete(self.root.take(), interval);
@@ -340,6 +540,32 @@ impl<T: Ord> IntervalTree<T> {
         }
     }
 
+    /// Deletes minimum interval in the tree
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::IntervalTree;
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// let mut interval_tree = IntervalTree::<usize>::init();
+    ///
+    /// interval_tree.insert(Interval::new(Included(0), Excluded(3)));
+    /// interval_tree.insert(Interval::new(Excluded(5), Included(8)));
+    /// interval_tree.insert(Interval::new(Included(6), Included(10)));
+    /// interval_tree.insert(Interval::new(Excluded(8), Included(9)));
+    /// interval_tree.insert(Interval::new(Excluded(15), Excluded(23)));
+    /// interval_tree.insert(Interval::new(Included(16), Excluded(21)));
+    /// interval_tree.insert(Interval::new(Included(17), Excluded(19)));
+    /// interval_tree.insert(Interval::new(Excluded(19), Included(20)));
+    /// interval_tree.insert(Interval::new(Excluded(25), Included(30)));
+    /// interval_tree.insert(Interval::new(Included(26), Included(26)));
+    ///
+    /// interval_tree.delete_min();
+    /// interval_tree.delete_min();
+    ///
+    /// assert!(interval_tree.find_overlap(&Interval::new(Included(1), Excluded(6))).is_none());
+    /// ```
     pub fn delete_min(&mut self) {
         if !self.is_empty() {
             self.root = IntervalTree::_delete_min(self.root.take().unwrap());
@@ -360,6 +586,31 @@ impl<T: Ord> IntervalTree<T> {
         Some(IntervalTree::balance(node))
     }
 
+    /// Deletes maximum interval in the tree
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::IntervalTree;
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// let mut interval_tree = IntervalTree::<usize>::init();
+    ///
+    /// interval_tree.insert(Interval::new(Included(0), Excluded(3)));
+    /// interval_tree.insert(Interval::new(Excluded(5), Included(8)));
+    /// interval_tree.insert(Interval::new(Included(6), Included(10)));
+    /// interval_tree.insert(Interval::new(Excluded(8), Included(9)));
+    /// interval_tree.insert(Interval::new(Excluded(15), Excluded(23)));
+    /// interval_tree.insert(Interval::new(Included(16), Excluded(21)));
+    /// interval_tree.insert(Interval::new(Included(17), Excluded(19)));
+    /// interval_tree.insert(Interval::new(Excluded(19), Included(20)));
+    /// interval_tree.insert(Interval::new(Excluded(25), Included(30)));
+    /// interval_tree.insert(Interval::new(Included(26), Included(26)));
+    ///
+    /// interval_tree.delete_max();
+    /// interval_tree.delete_max();
+    ///
+    /// assert!(interval_tree.find_overlap(&Interval::new(Included(25), Excluded(30))).is_none());
     pub fn delete_max(&mut self) {
         if !self.is_empty() {
             self.root = IntervalTree::_delete_max(self.root.take().unwrap());
@@ -380,6 +631,38 @@ impl<T: Ord> IntervalTree<T> {
         Some(IntervalTree::balance(node))
     }
 
+    /// Returns the kth smallest interval
+    ///
+    /// # Arguments
+    /// * `k`: the order statistic
+    ///
+    /// # Panics
+    /// * panics if k is not in range: 0 <= k <= size - 1
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::IntervalTree;
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// let mut interval_tree = IntervalTree::<usize>::init();
+    ///
+    /// interval_tree.insert(Interval::new(Excluded(0), Included(1)));
+    /// interval_tree.insert(Interval::new(Included(0), Excluded(3)));
+    /// interval_tree.insert(Interval::new(Included(6), Included(10)));
+    /// interval_tree.insert(Interval::new(Excluded(8), Included(9)));
+    /// interval_tree.insert(Interval::new(Excluded(15), Excluded(23)));
+    /// interval_tree.insert(Interval::new(Included(16), Excluded(21)));
+    /// interval_tree.insert(Interval::new(Included(17), Excluded(19)));
+    /// interval_tree.insert(Interval::new(Excluded(19), Included(20)));
+    /// interval_tree.insert(Interval::new(Excluded(25), Included(30)));
+    /// interval_tree.insert(Interval::new(Included(26), Included(26)));
+    ///
+    /// assert!(format!("{}", interval_tree.select(0).unwrap()) == String::from("[0,3)"));
+    /// assert!(format!("{}", interval_tree.select(1).unwrap()) == String::from("(0,1]"));
+    /// assert!(format!("{}", interval_tree.select(2).unwrap()) == String::from("[6,10]"));
+    /// assert!(format!("{}", interval_tree.select(3).unwrap()) == String::from("(8,9]"));
+    /// ```
     pub fn select(&self, k: usize) -> Option<Interval<T>> {
         if k > self.size() {
             panic!("K must be in range 0 <= k <= size - 1");
@@ -403,48 +686,124 @@ impl<T: Ord> IntervalTree<T> {
         }
     }
 
+    /// Returns minimum interval in the tree
     pub fn min(&self) -> Option<Interval<T>> {
         self.select(0)
     }
 
+    /// Returns maximum interval in the tree
     pub fn max(&self) -> Option<Interval<T>> {
         self.select(self.size() - 1)
     }
 
+    /// Returns all intervals between two intervals/points
+    ///
+    /// # Arguments
+    /// * `low_bound`: lowest interval of the range
+    /// * `high_bound`: highest interval of the range
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::IntervalTree;
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// let mut interval_tree = IntervalTree::<usize>::init();
+    ///
+    /// interval_tree.insert(Interval::new(Excluded(0), Included(1)));
+    /// interval_tree.insert(Interval::new(Included(0), Excluded(3)));
+    /// interval_tree.insert(Interval::new(Included(6), Included(10)));
+    /// interval_tree.insert(Interval::new(Excluded(8), Included(9)));
+    /// interval_tree.insert(Interval::new(Excluded(15), Excluded(23)));
+    /// interval_tree.insert(Interval::new(Included(16), Excluded(21)));
+    /// interval_tree.insert(Interval::new(Included(17), Excluded(19)));
+    /// interval_tree.insert(Interval::new(Excluded(19), Included(20)));
+    /// interval_tree.insert(Interval::new(Excluded(25), Included(30)));
+    /// interval_tree.insert(Interval::new(Included(26), Included(26)));
+    ///
+    /// let low = Interval::new(Included(14), Included(14));
+    /// let high = Interval::new(Included(24), Included(24));
+    /// let intervals = interval_tree.intervals_between(&low, &high);
+    ///
+    /// let accept = String::from("(15,23)[16,21)[17,19)(19,20]");
+    ///
+    /// let mut result = String::from("");
+    /// for interval in intervals {
+    ///     result.push_str(&format!("{}", interval))
+    /// }
+    ///
+    /// assert_eq!(result, accept);
+    /// ```
     pub fn intervals_between(
         &self,
-        low_key: &Interval<T>,
-        high_key: &Interval<T>,
+        low_bound: &Interval<T>,
+        high_bound: &Interval<T>,
     ) -> Vec<&Interval<T>> {
-        let mut keys: Vec<&Interval<T>> = Vec::new();
+        let mut intervals: Vec<&Interval<T>> = Vec::new();
 
-        IntervalTree::_intervals_between(&self.root, low_key, high_key, &mut keys);
+        IntervalTree::_intervals_between(&self.root, low_bound, high_bound, &mut intervals);
 
-        keys
+        intervals
     }
 
     fn _intervals_between<'a>(
         node: &'a Option<Box<Node<T>>>,
-        low_key: &Interval<T>,
-        high_key: &Interval<T>,
-        keys: &mut Vec<&'a Interval<T>>,
+        low_bound: &Interval<T>,
+        high_bound: &Interval<T>,
+        intervals: &mut Vec<&'a Interval<T>>,
     ) {
         if node.is_none() {
             return;
         }
 
         let node_ref = node.as_ref().unwrap();
-        if *low_key < *node_ref.interval() {
-            IntervalTree::_intervals_between(&node_ref.left_child, low_key, high_key, keys);
+        if *low_bound < *node_ref.interval() {
+            IntervalTree::_intervals_between(
+                &node_ref.left_child,
+                low_bound,
+                high_bound,
+                intervals,
+            );
         }
-        if *low_key <= *node_ref.interval() && *node_ref.interval() <= *high_key {
-            keys.push(node_ref.interval());
+        if *low_bound <= *node_ref.interval() && *node_ref.interval() <= *high_bound {
+            intervals.push(node_ref.interval());
         }
-        if *high_key > *node_ref.interval() {
-            IntervalTree::_intervals_between(&node_ref.right_child, low_key, high_key, keys);
+        if *high_bound > *node_ref.interval() {
+            IntervalTree::_intervals_between(
+                &node_ref.right_child,
+                low_bound,
+                high_bound,
+                intervals,
+            );
         }
     }
 
+    /// Returns the number of intervals in the tree less than `interval`
+    ///
+    /// # Arguments
+    /// * `interval`: interval to be searched for
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::IntervalTree;
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// let mut interval_tree = IntervalTree::<usize>::init();
+    ///
+    /// interval_tree.insert(Interval::new(Included(0), Excluded(3)));
+    /// interval_tree.insert(Interval::new(Excluded(5), Included(8)));
+    /// interval_tree.insert(Interval::new(Included(6), Included(10)));
+    /// interval_tree.insert(Interval::new(Excluded(8), Included(9)));
+    /// interval_tree.insert(Interval::new(Excluded(15), Excluded(23)));
+    /// interval_tree.insert(Interval::new(Included(16), Excluded(21)));
+    /// interval_tree.insert(Interval::new(Included(17), Excluded(19)));
+    /// interval_tree.insert(Interval::new(Excluded(19), Included(20)));
+    /// interval_tree.insert(Interval::new(Excluded(25), Included(30)));
+    /// interval_tree.insert(Interval::new(Included(26), Included(26)));
+    ///
+    /// assert_eq!(interval_tree.rank(&Interval::point(5)), 1);
+    /// ```
     pub fn rank(&self, interval: &Interval<T>) -> usize {
         IntervalTree::_rank(&self.root, interval)
     }
@@ -455,22 +814,52 @@ impl<T: Ord> IntervalTree<T> {
         let node_ref = node.as_ref().unwrap();
         if *interval < *node_ref.interval() {
             IntervalTree::_rank(&node_ref.left_child, interval)
-        } else if *interval > *node_ref.interval() {
+        } else if *interval >= *node_ref.interval() {
             1 + Node::size(&node_ref.left_child)
                 + IntervalTree::_rank(&node_ref.right_child, interval)
         } else {
             Node::size(&node_ref.left_child)
         }
     }
-    pub fn size_between(&self, low_key: &Interval<T>, high_key: &Interval<T>) -> usize {
+
+    /// Returns the number of intervals in the tree between `low_bound` and `high_bound`
+    ///
+    /// # Arguments
+    /// * `low_bound`: lowest interval of the range
+    /// * `high_bound`: highest interval of the range
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::tree::IntervalTree;
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// let mut interval_tree = IntervalTree::<usize>::init();
+    ///
+    /// interval_tree.insert(Interval::new(Included(0), Excluded(3)));
+    /// interval_tree.insert(Interval::new(Excluded(5), Included(8)));
+    /// interval_tree.insert(Interval::new(Included(6), Included(10)));
+    /// interval_tree.insert(Interval::new(Excluded(8), Included(9)));
+    /// interval_tree.insert(Interval::new(Excluded(15), Excluded(23)));
+    /// interval_tree.insert(Interval::new(Included(16), Excluded(21)));
+    /// interval_tree.insert(Interval::new(Included(17), Excluded(19)));
+    /// interval_tree.insert(Interval::new(Excluded(19), Included(20)));
+    /// interval_tree.insert(Interval::new(Excluded(25), Included(30)));
+    /// interval_tree.insert(Interval::new(Included(26), Included(26)));
+    ///
+    /// let low = Interval::point(10);
+    /// let high = Interval::point(25);
+    /// assert_eq!(interval_tree.size_between(&low, &high), 5);
+    /// ```
+    pub fn size_between(&self, low_bound: &Interval<T>, high_bound: &Interval<T>) -> usize {
         if self.is_empty() {
             return 0;
         }
-        if *low_key > *high_key {
+        if *low_bound > *high_bound {
             return 0;
         }
 
-        return self.rank(high_key) - self.rank(low_key);
+        return self.rank(high_bound) - self.rank(low_bound) + 1;
     }
 }
 
