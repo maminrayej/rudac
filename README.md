@@ -18,6 +18,9 @@ Data structures:
     - Binomial Tree
     - [AVL Tree](https://en.wikipedia.org/wiki/AVL_tree)
     - [Red-Black Tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree)
+    - [Interval Tree](https://en.wikipedia.org/wiki/Interval_tree)
+* Utils:
+    - Interval (Open, closed and unbounded intervals)
 
 Todo:
 * "Circular Queue" Wiki
@@ -26,4 +29,4 @@ Todo:
 * "Min-Max Heap" Wiki
 * "AVL Tree" Wiki
 * "Red-Black Tree" Wiki
-* :soon: [Interval Tree](https://en.wikipedia.org/wiki/Interval_tree)
+* :soon: [k-d Tree](https://en.wikipedia.org/wiki/K-d_tree)
