@@ -3,12 +3,70 @@ use std::ops::Bound;
 use std::ops::Bound::*;
 use std::rc::Rc;
 
+/// A utility data structure to represent intervals.
+/// It supports open, close and unbounded intervals
+///
+/// # Examples
+/// ```
+/// use rudac::util::Interval;
+/// use std::ops::Bound::*;
+///
+/// // initialize interval [2,4]
+/// let interval1 = Interval::new(Included(2), Included(4));
+/// 
+/// // initialize interval [2,4)
+/// let interval2 = Interval::new(Included(2), Excluded(4));
+///
+/// // initialize point [4,4]
+/// let point1 = Interval::point(4);
+///
+/// // compare intervals
+/// // first, lower bounds are compared. if they're equal, higher bounds will be compared
+/// assert!(interval2 < interval1);
+///
+/// // check if two intervals overlap
+/// assert!(Interval::overlaps(&interval1, &interval2));
+///
+/// // check if one point and an interval overlap
+/// assert!(Interval::overlaps(&interval1, &point1));
+/// assert!(!Interval::overlaps(&interval2, &point1));
+///
+/// // check if one interval contains another interval
+/// assert!(Interval::contains(&interval1, &interval2));
+///
+/// // get overlapped interval between two intervals
+/// assert!(Interval::get_overlap(&interval1, &interval2).unwrap() == interval2);
+/// ```
 pub struct Interval<T: Ord> {
     low: Rc<Bound<T>>,
     high: Rc<Bound<T>>,
 }
 
 impl<T: Ord> Interval<T> {
+    /// Creates a new interval
+    ///
+    /// # Arguments
+    /// * `low`: lower bound of the interval
+    /// * `high`: higher bound of the interval
+    ///
+    /// # Panics
+    /// * panics if `low` > `high`. `low` == `high` is acceptable if interval is closed at both sides: [low, high]
+    ///
+    /// # Example
+    /// ```
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// // create the interval [2,4)
+    /// let interval1 = Interval::new(Included(2), Excluded(4));
+    ///
+    /// // create the interval (-inf,4)
+    /// let interval2 = Interval::new(Unbounded, Excluded(4));
+    ///
+    ///
+    /// // create the interval (1,+inf)
+    /// let interval3 = Interval::new(Excluded(1), Unbounded);
+    /// ```
     pub fn new(low: Bound<T>, high: Bound<T>) -> Interval<T> {
         let interval = Interval {
             low: Rc::new(low),
@@ -21,14 +79,52 @@ impl<T: Ord> Interval<T> {
         interval
     }
 
+    /// Creates a point.
+    ///
+    /// # Arguments
+    /// * `value`: value of the point
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// // create point (2) or equivalently interval [2,2]
+    /// let point1 = Interval::point(2);
+    /// ```
+    pub fn point(value: T) -> Interval<T> {
+        let low = Rc::new(Included(value));
+        let high = Rc::clone(&low);
+
+        let interval = Interval { low, high };
+
+        if !Interval::valid(&interval) {
+            panic!("Interval is not valid")
+        }
+
+        interval
+    }
+
+    /// Creates a duplicate of the interval
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// let interval = Interval::new(Included(2), Unbounded);
+    /// let duplicate = interval.duplicate();
+    ///
+    /// assert!(interval == duplicate);
+    /// ```
     pub fn duplicate(&self) -> Interval<T> {
         Interval {
             low: self.get_low(),
-            high: self.get_high()
+            high: self.get_high(),
         }
     }
 
-    pub fn valid(interval: &Interval<T>) -> bool {
+    fn valid(interval: &Interval<T>) -> bool {
         match (&interval.low(), &interval.high()) {
             (Included(low), Included(high)) => low <= high,
 
@@ -39,22 +135,42 @@ impl<T: Ord> Interval<T> {
             _ => true,
         }
     }
+
+    /// Get reference to lower bound of the interval
     pub fn low(&self) -> &Bound<T> {
         self.low.as_ref()
     }
 
+    /// Get a duplicate of lower bound of the interval
     pub fn get_low(&self) -> Rc<Bound<T>> {
         Rc::clone(&self.low)
     }
 
+    /// Get reference to higher bound of the interval
     pub fn high(&self) -> &Bound<T> {
         self.high.as_ref()
     }
 
+    /// Get a duplicate of higher bound of the interval
     pub fn get_high(&self) -> Rc<Bound<T>> {
         Rc::clone(&self.high)
     }
 
+    /// Returns true if `first` and `second` intervals overlap, false otherwise
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// let interval1 = Interval::new(Included(2), Included(4));
+    /// let interval2 = Interval::new(Included(2), Excluded(4));
+    /// let point1 = Interval::point(4);
+    ///
+    /// assert!(Interval::overlaps(&interval1, &interval2));
+    /// assert!(Interval::overlaps(&interval1, &point1));
+    /// assert!(!Interval::overlaps(&interval2, &point1));
+    /// ```
     pub fn overlaps(first: &Interval<T>, second: &Interval<T>) -> bool {
         let high: &Bound<T>;
         let low: &Bound<T>;
@@ -78,6 +194,18 @@ impl<T: Ord> Interval<T> {
         }
     }
 
+    /// Returns true if `second` is a sub-interval of `first`, false otherwise
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// let interval1 = Interval::new(Included(2), Included(4));
+    /// let interval2 = Interval::new(Included(2), Excluded(4));
+    ///
+    /// assert!(Interval::contains(&interval1, &interval2));
+    /// ```
     pub fn contains(first: &Interval<T>, second: &Interval<T>) -> bool {
         if Interval::overlaps(first, second) {
             let overlap = Interval::get_overlap(first, second).unwrap();
@@ -88,6 +216,19 @@ impl<T: Ord> Interval<T> {
         }
     }
 
+    /// Get overlapped interval of `first` and `second`, `None` otherwise
+    ///
+    /// # Examples
+    /// ```
+    /// use rudac::util::Interval;
+    /// use std::ops::Bound::*;
+    ///
+    /// // initialize intervals
+    /// let interval1 = Interval::new(Included(2), Included(4));
+    /// let interval2 = Interval::new(Included(2), Excluded(4));
+    ///
+    /// assert!(Interval::get_overlap(&interval1, &interval2).unwrap() == interval2);
+    /// ```
     pub fn get_overlap(first: &Interval<T>, second: &Interval<T>) -> Option<Interval<T>> {
         if !Interval::overlaps(first, second) {
             return None;
