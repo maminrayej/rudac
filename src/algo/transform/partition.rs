@@ -1,7 +1,7 @@
 use std::cmp::{Ord, Ordering};
 
 pub fn partition<T: Ord>(slice: &mut [T], low: usize, high: usize, pivot_index: usize) -> usize {
-    partition_with(slice, low, high, pivot_index, &|x1: &T, x2: &T| {x1.cmp(x2)})
+    partition_with(slice, low, high, pivot_index, &|x1: &T, x2: &T| x1.cmp(x2))
 }
 
 pub fn partition_with<T, F>(
