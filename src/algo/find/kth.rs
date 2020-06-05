@@ -39,6 +39,39 @@ where
     }
 }
 
+pub fn min<T: Ord>(slice: &mut [T]) -> usize {
+    kth(slice, 0)
+}
+
+pub fn min_with<T, F>(slice: &mut [T], compare: F) -> usize
+where
+    F: Fn(&T, &T) -> Ordering,
+{
+    kth_with(slice, 0, compare)
+}
+
+pub fn max<T: Ord>(slice: &mut [T]) -> usize {
+    kth(slice, slice.len()-1)
+}
+
+pub fn max_with<T, F>(slice: &mut [T], compare: F) -> usize
+where
+    F: Fn(&T, &T) -> Ordering,
+{
+    kth_with(slice, slice.len()-1, compare)
+}
+
+pub fn median<T: Ord>(slice: &mut [T]) -> usize {
+    kth(slice, slice.len()/2)
+}
+
+pub fn median_with<T, F>(slice: &mut [T], compare: F) -> usize
+where
+    F: Fn(&T, &T) -> Ordering,
+{
+    kth_with(slice, slice.len()/2, compare)
+}
+
 fn set_median_with<T, F>(slice: &mut [T], compare: &F)
 where
     F: Fn(&T, &T) -> Ordering,
