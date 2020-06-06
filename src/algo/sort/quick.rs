@@ -41,6 +41,8 @@ mod tests {
 
         quick_sort(&mut vec);
 
-        println!("{:?}", vec);
+        for i in 0..100 {
+            assert_eq!(vec[i], i);
+        }
     }
 }
