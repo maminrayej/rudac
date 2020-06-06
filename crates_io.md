@@ -7,15 +7,29 @@ It is still an ongoing project.
 
 Data structures:
 * Queue:
-    - [Circular Queue / Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer)
+    - Circular Queue / Circular Buffer
 * Heap:
-    - [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
-    - [Fibonacci Heap](https://en.wikipedia.org/wiki/Fibonacci_heap)
-    - [Min-Max Heap](https://en.wikipedia.org/wiki/Min-max_heap)
+    - Binomial Heap
+    - Fibonacci Heap
+    - Min-Max Heap
 * Tree:
     - Binomial Tree
-    - [AVL Tree](https://en.wikipedia.org/wiki/AVL_tree)
-    - [Red-Black Tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree)
-    - [Interval Tree](https://en.wikipedia.org/wiki/Interval_tree)
+    - AVL Tree
+    - Red-Black Tree
+    - Interval Tree
 * Utils:
     - Interval (Open, closed and unbounded intervals)
+
+Algorithms:
+* Find:
+    - kth smallest item(including min, max, median)
+* Search:
+    - Binary Search
+    - Exponential Search
+    - Fibonacci Search
+    - Linear Search
+* Sort:
+    - Merge Sort
+    - Quick Sort
+* Transformation:
+    - Partition around a pivot
