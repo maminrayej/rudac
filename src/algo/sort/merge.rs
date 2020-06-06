@@ -1,9 +1,42 @@
 use std::cmp::{Ord, Ordering};
 
+/// Merge sort is an efficient, general-purpose, comparison-based sorting algorithm
+/// 
+/// # Arguments
+/// * `slice`: slice of data to be sorted
+/// 
+/// # Examples
+/// ```
+/// use rudac::algo::sort::merge_sort;
+/// 
+/// let mut vec = vec![10, 6, 1, 4, 2, 3, 7, 9, 8, 5];
+/// 
+/// merge_sort(&mut vec);
+/// 
+/// assert_eq!(vec, vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+/// ```
 pub fn merge_sort<T: Copy + Ord>(slice: &mut [T]) {
     merge_sort_with(slice, &|left: &T, right: &T| left.cmp(&right))
 }
 
+/// Merge sort is an efficient, general-purpose, comparison-based sorting algorithm
+/// 
+/// # Arguments
+/// * `slice`: slice of data to be sorted
+/// * `compare`: custom comparison closure
+/// 
+/// # Examples
+/// ```
+/// use rudac::algo::sort::merge_sort_with;
+/// 
+/// // consider vector of 2d points
+/// let mut vec = vec![(1, 10), (2,6), (3,1), (3,4), (4,2), (5,3), (6,7), (8,9), (9,8), (10,5)];
+/// 
+/// // sort based on y axis
+/// merge_sort_with(&mut vec, &|x1,x2| {x1.1.cmp(&x2.1)});
+/// 
+/// assert_eq!(vec, vec![(3,1), (4,2), (5,3), (3,4), (10,5), (2,6), (6,7), (9,8), (8,9), (1,10)]);
+/// ```
 pub fn merge_sort_with<T: Copy, F>(slice: &mut [T], compare: &F)
 where
     F: Fn(&T, &T) -> Ordering,
