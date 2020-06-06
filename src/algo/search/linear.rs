@@ -21,7 +21,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn algo_find_linear_search() {
+    fn algo_search_linear_search() {
         let mut vec = Vec::with_capacity(100);
 
         for i in 50..100 {
