@@ -1,4 +1,6 @@
 # rudac
+[![Crate](https://img.shields.io/crates/v/rudac.svg)](https://crates.io/crates/rudac)
+[![API](https://docs.rs/rudac/badge.svg)](https://docs.rs/rudac)
 
 Rudac is a **Ru**st **D**ata structure and **A**lgorithm **C**rate.
 It aims to be a comprehensive crate of usefull data structure and algorithms.
