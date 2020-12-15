@@ -1,5 +1,6 @@
 use crate::util::Interval;
 use std::cmp::Ord;
+use std::fmt::Debug;
 use std::ops::Bound;
 use std::ops::Bound::*;
 use std::rc::Rc;
@@ -885,6 +886,13 @@ impl<T: Ord> IntervalTree<T> {
     }
 }
 
+impl<T: Debug + Ord> Debug for IntervalTree<T> {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        fmt.write_str("IntervalTree ")?;
+        fmt.debug_set().entries(self.intervals().iter()).finish()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1371,5 +1379,14 @@ mod tests {
         }
 
         assert_eq!(result, accept);
+    }
+
+    #[test]
+    fn tree_interval_debug() {
+        let mut interval_tree = IntervalTree::<usize>::init();
+        assert_eq!(format!("{:?}", &interval_tree), "IntervalTree {}");
+        interval_tree.insert(Interval::new(Excluded(0), Included(1)));
+        assert_eq!(format!("{:?}", &interval_tree),
+            "IntervalTree {Interval { low: Excluded(0), high: Included(1) }}");
     }
 }
