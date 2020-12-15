@@ -13,7 +13,7 @@ use std::rc::Rc;
 ///
 /// // initialize interval [2,4]
 /// let interval1 = Interval::new(Included(2), Included(4));
-/// 
+///
 /// // initialize interval [2,4)
 /// let interval2 = Interval::new(Included(2), Excluded(4));
 ///
@@ -37,6 +37,7 @@ use std::rc::Rc;
 /// // get overlapped interval between two intervals
 /// assert!(Interval::get_overlap(&interval1, &interval2).unwrap() == interval2);
 /// ```
+#[derive(Debug)]
 pub struct Interval<T: Ord> {
     low: Rc<Bound<T>>,
     high: Rc<Bound<T>>,
