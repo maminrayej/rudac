@@ -37,7 +37,7 @@ use std::rc::Rc;
 /// // get overlapped interval between two intervals
 /// assert!(Interval::get_overlap(&interval1, &interval2).unwrap() == interval2);
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Hash)]
 pub struct Interval<T: Ord> {
     low: Rc<Bound<T>>,
     high: Rc<Bound<T>>,

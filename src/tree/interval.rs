@@ -5,6 +5,7 @@ use std::ops::Bound;
 use std::ops::Bound::*;
 use std::rc::Rc;
 
+#[derive(Hash)]
 struct Node<T: Ord> {
     interval: Option<Interval<T>>,
     max: Option<Rc<Bound<T>>>,
@@ -175,6 +176,7 @@ impl<T: Ord> Node<T> {
 /// // intervals are: (15,23), [16,21), [17,19), (19,20]
 /// let intervals = interval_tree.intervals_between(&low, &high);
 /// ```
+#[derive(Hash)]
 pub struct IntervalTree<T: Ord> {
     root: Option<Box<Node<T>>>,
 }
