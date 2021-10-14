@@ -490,20 +490,13 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
         }
 
         // extract node with highest priority from heap
-        let mut priority_node = self.priority_pointer.take().unwrap();
+        let priority_node = self.priority_pointer.take().unwrap();
 
         // account for deleted node
         self.size -= 1;
 
         // iterate over children of removed node and add them to children list of heap
-        let mut next = priority_node.children_list.pop_front();
-        while !next.is_none() {
-            let child = next.unwrap();
-
-            self.children_list.push_back(child);
-
-            next = priority_node.children_list.pop_front();
-        }
+        self.children_list.extend(priority_node.children_list);
 
         // extract payload of priority node
         let payload = priority_node.payload;
@@ -540,9 +533,7 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
         let mut a: Vec<Option<InternalTree<T>>> = Vec::with_capacity(array_size);
 
         // initialize consolidate array
-        for _ in 0..array_size {
-            a.push(None);
-        }
+        a.resize_with(array_size, || None);
 
         // add priority node to children list
         // because we have to iterate over all nodes
@@ -550,51 +541,40 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
             .push_front(self.priority_pointer.take().unwrap());
 
         // iterate over children and merge trees with same degrees
-        let mut next = self.children_list.pop_front();
-        while !next.is_none() {
-            let mut x = next.unwrap(); // current internal tree
+        for mut x in self.children_list.drain(..) {
             let mut d = x.degree(); // degree of current internal tree
-            while !a[d].is_none() {
+            while a[d].is_some() {
                 // iterate over consolidate array to find the place for x
                 let y = a[d].take().unwrap(); // if there exists a tree with degree of x like y
                 x = InternalTree::merge(x, y); // merge x and y and store merged tree in x
                 d += 1; // degree of x is now d + 1 because it has y as its child
             }
             a[d] = Some(x); // finally when a degree is free(a[d]), means degree of x is unique. store it in consolidate array
-
-            next = self.children_list.pop_front(); // go to next tree in heap
         }
 
         // update priority pointer and children list
-        self.priority_pointer = None;
         let heap_is_min = self.is_min();
 
         // after consolidate, "a" has all the nodes in the heap
         // we have to find minimum between these nodes and add rest of them to children list of heap
         // so iterate over consolidate array
-        for i in 0..array_size {
-            if !a[i].is_none() {
-                if self.priority_pointer.is_none() {
-                    self.priority_pointer = a[i].take(); // first node becomes new priority node
-                } else {
-                    // current tree in a has higher priority than latest found priority node, swap them
-                    if InternalTree::has_higher_priority(
-                        &a[i].as_ref().unwrap(),
-                        &self.priority_pointer.as_ref().unwrap(),
-                        heap_is_min,
-                    ) {
-                        // swap priority node with current node in a
-                        let temp = self.priority_pointer.take().unwrap();
-                        self.priority_pointer = a[i].take();
-                        // add old priority node to children list of heap
-                        self.children_list.push_back(temp);
-                    } else {
-                        // if current tree in has lower priority than latest found priority node, just add to children list of heap
-                        self.children_list.push_back(a[i].take().unwrap());
-                    }
-                }
+
+        let mut nodes = a.into_iter().filter_map(|x| x);
+        let mut priority_pointer = nodes.next().unwrap();
+
+        for mut node in nodes {
+            if InternalTree::has_higher_priority(
+                &node,
+                &priority_pointer,
+                heap_is_min,
+            ) {
+                // current tree in a has higher priority than latest found priority node, swap them
+                std::mem::swap(&mut priority_pointer, &mut node);
             }
+            self.children_list.push_back(node);
         }
+
+        self.priority_pointer = Some(priority_pointer);
     }
 
     /// Returns a reference to item with highest priority
