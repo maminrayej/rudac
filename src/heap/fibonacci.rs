@@ -1,4 +1,4 @@
-use std::collections::LinkedList;
+use std::collections::VecDeque;
 
 #[derive(Debug)]
 pub struct InternalTree<T: std::cmp::Ord> {
@@ -6,10 +6,10 @@ pub struct InternalTree<T: std::cmp::Ord> {
     degree: usize,
 
     // data stored in the current node
-    payload: Option<T>,
+    payload: T,
 
     // children of the current node
-    children_list: LinkedList<InternalTree<T>>,
+    children_list: VecDeque<InternalTree<T>>,
 
     // indicates wether current node is a min heap-ordered tree or not
     min: bool,
@@ -20,37 +20,31 @@ impl<T: std::cmp::Ord> InternalTree<T> {
     fn init(payload: T, min: bool) -> InternalTree<T> {
         InternalTree {
             degree: 0,
-            payload: Some(payload),
-            children_list: LinkedList::new(),
+            payload,
+            children_list: VecDeque::new(),
             min,
         }
     }
 
     // returns true if tree1.payload <= tree2.payload
+    #[inline]
     fn is_smaller_or_equal(
         internal_tree_1: &InternalTree<T>,
         internal_tree_2: &InternalTree<T>,
     ) -> bool {
-        match (
-            internal_tree_1.peek_payload(),
-            internal_tree_2.peek_payload(),
-        ) {
-            (Some(payload1), Some(payload2)) => payload1 <= payload2,
-            _ => panic!("Payloads can not be empty"),
-        }
+        let payload1 = internal_tree_1.peek_payload();
+        let payload2 = internal_tree_2.peek_payload();
+        payload1 <= payload2
     }
     // returns true if tree1.payload >= tree2.payload
+    #[inline]
     fn is_greater_or_equal(
         internal_tree_1: &InternalTree<T>,
         internal_tree_2: &InternalTree<T>,
     ) -> bool {
-        match (
-            internal_tree_1.peek_payload(),
-            internal_tree_2.peek_payload(),
-        ) {
-            (Some(payload1), Some(payload2)) => payload1 >= payload2,
-            _ => panic!("Payloads can not be empty"),
-        }
+        let payload1 = internal_tree_1.peek_payload();
+        let payload2 = internal_tree_2.peek_payload();
+        payload1 >= payload2
     }
 
     // returns true if tree1 has higher priority than tree2
@@ -62,12 +56,10 @@ impl<T: std::cmp::Ord> InternalTree<T> {
         internal_tree_2: &InternalTree<T>,
         is_min: bool,
     ) -> bool {
-        if (is_min && InternalTree::is_smaller_or_equal(&internal_tree_1, &internal_tree_2))
-            || (!is_min && InternalTree::is_greater_or_equal(&internal_tree_1, &internal_tree_2))
-        {
-            true
+        if is_min {
+            InternalTree::is_smaller_or_equal(&internal_tree_1, &internal_tree_2)
         } else {
-            false
+            InternalTree::is_greater_or_equal(&internal_tree_1, &internal_tree_2)
         }
     }
 
@@ -107,21 +99,12 @@ impl<T: std::cmp::Ord> InternalTree<T> {
     }
 
     // returns a reference to root payload of current tree
-    fn peek_payload(&self) -> &Option<T> {
+    fn peek_payload(&self) -> &T {
         &self.payload
     }
 
-    // extracts the payload from root of current tree
-    fn get_payload(&mut self) -> T {
-        if self.payload.is_none() {
-            panic!("Payload is None");
-        }
-
-        self.payload.take().unwrap()
-    }
-
     // returns a reference to list of children of the current node
-    fn children_list(&self) -> &LinkedList<InternalTree<T>> {
+    fn children_list(&self) -> &VecDeque<InternalTree<T>> {
         &self.children_list
     }
 
@@ -146,10 +129,8 @@ where
         match node_opt {
             None => node_list,
             Some(node) => {
-                match node.peek_payload() {
-                    Some(value) => node_list.push_str(format!("{} ", value).as_str()),
-                    None => (),
-                }
+                let payload = node.peek_payload();
+                node_list.push_str(format!("{} ", payload).as_str());
                 for item in node.children_list() {
                     node_list
                         .push_str(format!("{}", InternalTree::_preorder(&Some(&item))).as_str());
@@ -169,7 +150,7 @@ mod internal_tree_tests {
         let it = InternalTree::init(1, true);
 
         assert_eq!(it.degree(), 0);
-        assert_eq!(*it.peek_payload(), Some(1));
+        assert_eq!(*it.peek_payload(), 1);
     }
 
     #[test]
@@ -193,7 +174,7 @@ mod internal_tree_tests {
         assert_eq!(it1.degree(), 1);
         assert_eq!(
             *it1.children_list.pop_back().unwrap().peek_payload(),
-            Some(1)
+            1
         );
     }
 
@@ -207,7 +188,7 @@ mod internal_tree_tests {
         assert_eq!(it2.degree(), 1);
         assert_eq!(
             *it2.children_list.pop_back().unwrap().peek_payload(),
-            Some(0)
+            0
         );
     }
 
@@ -221,7 +202,7 @@ mod internal_tree_tests {
         assert_eq!(merged_tree.degree(), 1);
         assert_eq!(
             *merged_tree.children_list.pop_back().unwrap().peek_payload(),
-            Some(1)
+            1
         );
     }
 
@@ -235,7 +216,7 @@ mod internal_tree_tests {
         assert_eq!(merged_tree.degree(), 1);
         assert_eq!(
             *merged_tree.children_list.pop_back().unwrap().peek_payload(),
-            Some(1)
+            1
         );
     }
 
@@ -295,7 +276,7 @@ mod internal_tree_tests {
 #[derive(Debug)]
 pub struct FibonacciHeap<T: std::cmp::Ord> {
     // doubly linked list of internal trees
-    children_list: LinkedList<InternalTree<T>>,
+    children_list: VecDeque<InternalTree<T>>,
 
     // total number of items in the heap
     size: usize,
@@ -311,7 +292,7 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
     // initializes a fibonacci heap
     fn init(min: bool) -> FibonacciHeap<T> {
         FibonacciHeap {
-            children_list: LinkedList::new(),
+            children_list: VecDeque::new(),
             size: 0,
             priority_pointer: None,
             min,
@@ -509,23 +490,16 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
         }
 
         // extract node with highest priority from heap
-        let mut priority_node = self.priority_pointer.take().unwrap();
+        let priority_node = self.priority_pointer.take().unwrap();
 
         // account for deleted node
         self.size -= 1;
 
         // iterate over children of removed node and add them to children list of heap
-        let mut next = priority_node.children_list.pop_front();
-        while !next.is_none() {
-            let child = next.unwrap();
-
-            self.children_list.push_back(child);
-
-            next = priority_node.children_list.pop_front();
-        }
+        self.children_list.extend(priority_node.children_list);
 
         // extract payload of priority node
-        let payload = priority_node.get_payload();
+        let payload = priority_node.payload;
 
         // if there is nodes in heap, consolidate them
         if !self.is_empty() {
@@ -559,9 +533,7 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
         let mut a: Vec<Option<InternalTree<T>>> = Vec::with_capacity(array_size);
 
         // initialize consolidate array
-        for _ in 0..array_size {
-            a.push(None);
-        }
+        a.resize_with(array_size, || None);
 
         // add priority node to children list
         // because we have to iterate over all nodes
@@ -569,51 +541,40 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
             .push_front(self.priority_pointer.take().unwrap());
 
         // iterate over children and merge trees with same degrees
-        let mut next = self.children_list.pop_front();
-        while !next.is_none() {
-            let mut x = next.unwrap(); // current internal tree
+        for mut x in self.children_list.drain(..) {
             let mut d = x.degree(); // degree of current internal tree
-            while !a[d].is_none() {
+            while a[d].is_some() {
                 // iterate over consolidate array to find the place for x
                 let y = a[d].take().unwrap(); // if there exists a tree with degree of x like y
                 x = InternalTree::merge(x, y); // merge x and y and store merged tree in x
                 d += 1; // degree of x is now d + 1 because it has y as its child
             }
             a[d] = Some(x); // finally when a degree is free(a[d]), means degree of x is unique. store it in consolidate array
-
-            next = self.children_list.pop_front(); // go to next tree in heap
         }
 
         // update priority pointer and children list
-        self.priority_pointer = None;
         let heap_is_min = self.is_min();
 
         // after consolidate, "a" has all the nodes in the heap
         // we have to find minimum between these nodes and add rest of them to children list of heap
         // so iterate over consolidate array
-        for i in 0..array_size {
-            if !a[i].is_none() {
-                if self.priority_pointer.is_none() {
-                    self.priority_pointer = a[i].take(); // first node becomes new priority node
-                } else {
-                    // current tree in a has higher priority than latest found priority node, swap them
-                    if InternalTree::has_higher_priority(
-                        &a[i].as_ref().unwrap(),
-                        &self.priority_pointer.as_ref().unwrap(),
-                        heap_is_min,
-                    ) {
-                        // swap priority node with current node in a
-                        let temp = self.priority_pointer.take().unwrap();
-                        self.priority_pointer = a[i].take();
-                        // add old priority node to children list of heap
-                        self.children_list.push_back(temp);
-                    } else {
-                        // if current tree in has lower priority than latest found priority node, just add to children list of heap
-                        self.children_list.push_back(a[i].take().unwrap());
-                    }
-                }
+
+        let mut nodes = a.into_iter().filter_map(|x| x);
+        let mut priority_pointer = nodes.next().unwrap();
+
+        for mut node in nodes {
+            if InternalTree::has_higher_priority(
+                &node,
+                &priority_pointer,
+                heap_is_min,
+            ) {
+                // current tree in a has higher priority than latest found priority node, swap them
+                std::mem::swap(&mut priority_pointer, &mut node);
             }
+            self.children_list.push_back(node);
         }
+
+        self.priority_pointer = Some(priority_pointer);
     }
 
     /// Returns a reference to item with highest priority
@@ -626,14 +587,15 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
     ///
     /// fibonacci_heap.push(0);
     ///
-    /// assert_eq!(*fibonacci_heap.peek(), Some(0));
+    /// assert_eq!(fibonacci_heap.peek(), Some(&0));
     /// ```
-    pub fn peek(&self) -> &Option<T> {
+    pub fn peek(&self) -> Option<&T> {
         if self.is_empty() {
-            return &None;
+            return None;
         }
 
-        self.priority_pointer.as_ref().unwrap().peek_payload()
+        let payload = self.priority_pointer.as_ref().unwrap().peek_payload();
+        Some(payload)
     }
 
     /// Clears the heap and resets internal flags
@@ -793,11 +755,10 @@ mod fibonacci_heap_tests {
 
         assert_eq!(fh.children_list.len(), 2);
         assert_eq!(
-            fh.priority_pointer
+            *fh.priority_pointer
                 .as_ref()
                 .unwrap()
-                .peek_payload()
-                .unwrap(),
+                .peek_payload(),
             0
         );
 
@@ -817,11 +778,10 @@ mod fibonacci_heap_tests {
 
         assert_eq!(fh.children_list.len(), 2);
         assert_eq!(
-            fh.priority_pointer
+            *fh.priority_pointer
                 .as_ref()
                 .unwrap()
-                .peek_payload()
-                .unwrap(),
+                .peek_payload(),
             0
         );
 
@@ -843,12 +803,11 @@ mod fibonacci_heap_tests {
 
         assert_eq!(merged_heap.size, 2);
         assert_eq!(
-            merged_heap
+            *merged_heap
                 .priority_pointer
                 .as_ref()
                 .unwrap()
-                .peek_payload()
-                .unwrap(),
+                .peek_payload(),
             0
         );
         assert_eq!(
@@ -871,12 +830,11 @@ mod fibonacci_heap_tests {
 
         assert_eq!(merged_heap.size, 4);
         assert_eq!(
-            merged_heap
+            *merged_heap
                 .priority_pointer
                 .as_ref()
                 .unwrap()
-                .peek_payload()
-                .unwrap(),
+                .peek_payload(),
             0
         );
         assert_eq!(
@@ -897,12 +855,11 @@ mod fibonacci_heap_tests {
 
         assert_eq!(merged_heap.size, 2);
         assert_eq!(
-            merged_heap
+            *merged_heap
                 .priority_pointer
                 .as_ref()
                 .unwrap()
-                .peek_payload()
-                .unwrap(),
+                .peek_payload(),
             0
         );
         assert_eq!(
