@@ -1,4 +1,4 @@
-use std::collections::LinkedList;
+use std::collections::VecDeque;
 
 #[derive(Debug)]
 pub struct InternalTree<T: std::cmp::Ord> {
@@ -9,7 +9,7 @@ pub struct InternalTree<T: std::cmp::Ord> {
     payload: Option<T>,
 
     // children of the current node
-    children_list: LinkedList<InternalTree<T>>,
+    children_list: VecDeque<InternalTree<T>>,
 
     // indicates wether current node is a min heap-ordered tree or not
     min: bool,
@@ -21,7 +21,7 @@ impl<T: std::cmp::Ord> InternalTree<T> {
         InternalTree {
             degree: 0,
             payload: Some(payload),
-            children_list: LinkedList::new(),
+            children_list: VecDeque::new(),
             min,
         }
     }
@@ -121,7 +121,7 @@ impl<T: std::cmp::Ord> InternalTree<T> {
     }
 
     // returns a reference to list of children of the current node
-    fn children_list(&self) -> &LinkedList<InternalTree<T>> {
+    fn children_list(&self) -> &VecDeque<InternalTree<T>> {
         &self.children_list
     }
 
@@ -295,7 +295,7 @@ mod internal_tree_tests {
 #[derive(Debug)]
 pub struct FibonacciHeap<T: std::cmp::Ord> {
     // doubly linked list of internal trees
-    children_list: LinkedList<InternalTree<T>>,
+    children_list: VecDeque<InternalTree<T>>,
 
     // total number of items in the heap
     size: usize,
@@ -311,7 +311,7 @@ impl<T: std::cmp::Ord> FibonacciHeap<T> {
     // initializes a fibonacci heap
     fn init(min: bool) -> FibonacciHeap<T> {
         FibonacciHeap {
-            children_list: LinkedList::new(),
+            children_list: VecDeque::new(),
             size: 0,
             priority_pointer: None,
             min,
